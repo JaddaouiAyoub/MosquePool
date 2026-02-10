@@ -11,6 +11,7 @@ class AddTripScreen extends StatefulWidget {
 class _AddTripScreenState extends State<AddTripScreen> {
   final _formKey = GlobalKey<FormState>();
   final _mosqueController = TextEditingController();
+  final _departureController = TextEditingController();
   final _seatsController = TextEditingController();
   final List<TextEditingController> _pickupControllers = [
     TextEditingController(),
@@ -40,9 +41,22 @@ class _AddTripScreenState extends State<AddTripScreen> {
             ),
             const SizedBox(height: 24),
             TextFormField(
+              controller: _departureController,
+              decoration: const InputDecoration(
+                labelText: 'Departure Point',
+                prefixIcon: Icon(Icons.location_on_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              ),
+              validator: (val) =>
+                  val!.isEmpty ? 'Please enter departure point' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
               controller: _mosqueController,
               decoration: const InputDecoration(
-                labelText: 'Mosque Name',
+                labelText: 'Destination Mosque',
                 prefixIcon: Icon(Icons.mosque),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),

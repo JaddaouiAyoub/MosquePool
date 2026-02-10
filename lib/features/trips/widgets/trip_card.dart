@@ -28,6 +28,29 @@ class TripCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              trip.departurePoint,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 3),
+                          child: Icon(
+                            Icons.more_vert,
+                            size: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                         Text(
                           trip.mosqueName,
                           style: Theme.of(context).textTheme.titleLarge
@@ -36,7 +59,7 @@ class TripCard extends StatelessWidget {
                                 color: AppTheme.primaryGreen,
                               ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             const Icon(
