@@ -20,11 +20,6 @@ class MainNavigationWrapper extends StatelessWidget {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Badge(label: Text('2'), child: Icon(Icons.message_outlined)),
-            selectedIcon: Badge(label: Text('2'), child: Icon(Icons.message)),
-            label: 'Messages',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.history_outlined),
             selectedIcon: Icon(Icons.history),
             label: 'My Trips',

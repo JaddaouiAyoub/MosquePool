@@ -10,7 +10,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trips = ref.watch(mockTripsProvider);
+    final trips = ref.watch(tripsProvider);
 
     return Scaffold(
       body: CustomScrollView(

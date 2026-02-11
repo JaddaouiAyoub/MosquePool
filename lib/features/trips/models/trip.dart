@@ -1,3 +1,5 @@
+import '../../auth/models/user_model.dart';
+
 enum TripStatus { active, expired, completed }
 
 class Trip {
@@ -10,6 +12,7 @@ class Trip {
   final int seatsAvailable;
   final List<String> pickupPoints;
   final TripStatus status;
+  final List<UserModel> interestedUsers;
 
   Trip({
     required this.id,
@@ -21,7 +24,33 @@ class Trip {
     required this.seatsAvailable,
     required this.pickupPoints,
     this.status = TripStatus.active,
+    this.interestedUsers = const [],
   });
 
   bool get isFull => seatsAvailable <= 0;
+
+  bool getIsInterested(String userId) =>
+      interestedUsers.any((u) => u.id == userId);
+
+  Trip copyWith({
+    int? seatsAvailable,
+    List<UserModel>? interestedUsers,
+    String? departurePoint,
+    String? mosqueName,
+    DateTime? departureTime,
+    List<String>? pickupPoints,
+  }) {
+    return Trip(
+      id: id,
+      driverId: driverId,
+      driverName: driverName,
+      departurePoint: departurePoint ?? this.departurePoint,
+      mosqueName: mosqueName ?? this.mosqueName,
+      departureTime: departureTime ?? this.departureTime,
+      seatsAvailable: seatsAvailable ?? this.seatsAvailable,
+      pickupPoints: pickupPoints ?? this.pickupPoints,
+      status: status,
+      interestedUsers: interestedUsers ?? this.interestedUsers,
+    );
+  }
 }

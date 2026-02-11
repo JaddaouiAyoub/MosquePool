@@ -1,315 +1,329 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/trip.dart';
+import '../providers/trips_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
-class TripDetailsScreen extends StatelessWidget {
+class TripDetailsScreen extends ConsumerWidget {
   final Trip trip;
 
   const TripDetailsScreen({super.key, required this.trip});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(profileProvider);
+    // Watch the individual trip from provider to react to changes
+    final currentTrip = ref
+        .watch(tripsProvider)
+        .firstWhere((t) => t.id == trip.id, orElse: () => trip);
+    final isInterested = currentTrip.getIsInterested(user.id);
+    final isOwner = currentTrip.driverId == user.id;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
-        title: const Text(
-          'Trip Details',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDriverCard(context),
-            const SizedBox(height: 28),
-            _buildInfoCard(context),
-            const SizedBox(height: 28),
-            Text(
-              "Trip Route",
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            _buildRouteTimeline(),
-            const SizedBox(height: 40),
-            _buildActionButtons(),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ---------------- DRIVER CARD ----------------
-
-  Widget _buildDriverCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: AppTheme.primaryGreen,
-            child: Text(
-              trip.driverName[0].toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryGreen,
+                      AppTheme.primaryGreen.withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      Text(
+                        currentTrip.mosqueName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        DateFormat(
+                          'EEEE, MMM d • HH:mm',
+                        ).format(currentTrip.departureTime),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                trip.driverName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDriverProfile(context, isOwner),
+                  const SizedBox(height: 40),
+                  Text(
+                    "Fluid Journey",
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildFluidRoute(context, currentTrip),
+                  const SizedBox(height: 40),
+                  _buildStatsRow(currentTrip),
+                  const SizedBox(height: 40),
+                  if (!isOwner)
+                    _buildActionButtons(
+                      context,
+                      ref,
+                      currentTrip,
+                      user,
+                      isInterested,
+                    ),
+                  if (isOwner)
+                    Center(
+                      child: Text(
+                        "You are the driver of this trip",
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                "Driver • ⭐ 4.8",
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  // ---------------- INFO CARD ----------------
-
-  Widget _buildInfoCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _infoRow(
-            Icons.mosque,
-            "Destination",
-            trip.mosqueName,
-          ),
-          const SizedBox(height: 18),
-          _infoRow(
-            Icons.access_time,
-            "Departure",
-            DateFormat('EEEE • HH:mm').format(trip.departureTime),
-          ),
-          const SizedBox(height: 18),
-          _infoRow(
-            Icons.event_seat,
-            "Seats Available",
-            "${trip.seatsAvailable} seats",
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _buildDriverProfile(BuildContext context, bool isOwner) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppTheme.primaryGreen.withOpacity(0.2),
+              width: 2,
+            ),
           ),
-          child: Icon(icon, size: 18, color: AppTheme.primaryGreen),
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: AppTheme.secondaryBlue.withOpacity(0.1),
+            child: Text(
+              trip.driverName[0],
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.secondaryBlue,
+              ),
+            ),
+          ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 16),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-              ),
+              isOwner ? "You (Driver)" : trip.driverName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+            const Text(
+              "Premium Driver • ⭐ 4.9",
+              style: TextStyle(color: Colors.grey),
             ),
           ],
-        )
+        ),
       ],
     );
   }
 
-  // ---------------- TIMELINE ----------------
-
-  Widget _buildRouteTimeline() {
+  Widget _buildFluidRoute(BuildContext context, Trip currentTrip) {
     final stops = [
       {
-        'value': trip.departurePoint,
-        'isMain': true,
+        'val': currentTrip.departurePoint,
+        'icon': Icons.my_location,
+        'color': AppTheme.secondaryBlue,
       },
-      ...trip.pickupPoints.map(
+      ...currentTrip.pickupPoints.map(
         (p) => {
-          'value': p,
-          'isMain': false,
+          'val': p,
+          'icon': Icons.push_pin_outlined,
+          'color': Colors.grey,
         },
       ),
       {
-        'value': trip.mosqueName,
-        'isMain': true,
+        'val': currentTrip.mosqueName,
+        'icon': Icons.mosque,
+        'color': AppTheme.primaryGreen,
       },
     ];
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 16,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Column(
       children: List.generate(stops.length, (index) {
         final stop = stops[index];
         final isLast = index == stops.length - 1;
 
         return Row(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _timelineDot(
-              text: stop['value'] as String,
-              isMain: stop['isMain'] as bool,
+            Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: (stop['color'] as Color).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    stop['icon'] as IconData,
+                    size: 16,
+                    color: stop['color'] as Color,
+                  ),
+                ),
+                if (!isLast)
+                  Container(
+                    width: 2,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          stop['color'] as Color,
+                          (stops[index + 1]['color'] as Color),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            if (!isLast) _connector(),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  Text(
+                    stop['val'] as String,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    index == 0
+                        ? "Initial Departure"
+                        : (index == stops.length - 1
+                              ? "Final Destination"
+                              : "Pickup point"),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
           ],
         );
       }),
     );
   }
 
-  Widget _timelineDot({
-    required String text,
-    required bool isMain,
-  }) {
+  Widget _buildStatsRow(Trip currentTrip) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isMain
-                ? AppTheme.primaryGreen
-                : Colors.grey.shade400,
-          ),
+        _buildStatItem(
+          Icons.event_seat,
+          "${currentTrip.seatsAvailable}",
+          "left",
         ),
-        const SizedBox(width: 6),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 120),
-          child: Text(
-            text,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isMain ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
+        _buildStatItem(Icons.timer, "25", "min"),
+        _buildStatItem(Icons.security, "Verified", "trip"),
       ],
     );
   }
 
-  Widget _connector() {
-    return Row(
+  Widget _buildStatItem(IconData icon, String value, String label) {
+    return Column(
       children: [
-        Container(
-          width: 28,
-          height: 1.5,
-          color: Colors.grey.shade300,
+        Icon(icon, color: AppTheme.primaryGreen.withOpacity(0.6)),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        Icon(
-          Icons.arrow_forward,
-          size: 14,
-          color: Colors.grey.shade400,
-        ),
-        Container(
-          width: 8,
-          height: 1.5,
-          color: Colors.grey.shade300,
-        ),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
       ],
     );
   }
 
-  // ---------------- ACTION BUTTONS ----------------
-
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(
+    BuildContext context,
+    WidgetRef ref,
+    Trip currentTrip,
+    user,
+    bool isInterested,
+  ) {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
-            onPressed: () {},
-            icon: const Icon(Icons.message),
-            label: const Text("Message"),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: ElevatedButton.icon(
+          child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: isInterested
+                  ? AppTheme.secondaryBlue
+                  : AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 20),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
               ),
+              elevation: 4,
+            ),
+            onPressed: () {
+              ref
+                  .read(tripsProvider.notifier)
+                  .toggleInterest(currentTrip.id, user);
+            },
+            child: Text(
+              isInterested ? "Joined ✅" : "Join this Trip",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: IconButton(
+            padding: const EdgeInsets.all(16),
+            icon: const Icon(
+              Icons.phone_in_talk,
+              color: AppTheme.secondaryBlue,
             ),
             onPressed: () {},
-            icon: const Icon(Icons.phone),
-            label: const Text("Call"),
           ),
         ),
       ],

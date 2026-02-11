@@ -1,142 +1,237 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/trip.dart';
+import '../providers/trips_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
-class TripCard extends StatelessWidget {
+class TripCard extends ConsumerWidget {
   final Trip trip;
   final VoidCallback onTap;
 
   const TripCard({super.key, required this.trip, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(profileProvider);
+    final isInterested = trip.getIsInterested(user.id);
+    final isOwner = trip.driverId == user.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryGreen.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: InkWell(
+          onTap: onTap,
+          child: Stack(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.mosque,
+                                size: 14,
+                                color: AppTheme.primaryGreen,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                trip.mosqueName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryGreen,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isOwner) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              "MY TRIP",
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.secondaryBlue,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const Spacer(),
+                        Text(
+                          DateFormat('HH:mm').format(trip.departureTime),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: AppTheme.secondaryBlue,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          children: [
+                            const Icon(
+                              Icons.my_location,
+                              size: 18,
+                              color: AppTheme.secondaryBlue,
+                            ),
+                            Container(
+                              width: 2,
+                              height: 20,
+                              color: Colors.grey.shade200,
+                            ),
+                            const Icon(
+                              Icons.location_on,
+                              size: 18,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                trip.departurePoint,
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              Text(
+                                trip.mosqueName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            const Icon(
-                              Icons.circle,
-                              size: 8,
-                              color: Colors.grey,
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.grey.shade200,
+                              child: Text(
+                                trip.driverName[0],
+                                style: const TextStyle(fontSize: 10),
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              trip.departurePoint,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.only(left: 3),
-                          child: Icon(
-                            Icons.more_vert,
-                            size: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        Text(
-                          trip.mosqueName,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryGreen,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.person,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
                               trip.driverName,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[600]),
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          trip.seatsAvailable.toString(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryGreen,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                        ),
-                        const Text(
-                          'seats',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppTheme.primaryGreen,
+                          decoration: BoxDecoration(
+                            color: trip.seatsAvailable == 0
+                                ? Colors.red.withOpacity(0.1)
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            trip.seatsAvailable == 0
+                                ? 'Full'
+                                : '${trip.seatsAvailable} seats left',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: trip.seatsAvailable == 0
+                                  ? Colors.red
+                                  : Colors.orange.shade800,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const Divider(height: 24),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.access_time_filled,
-                    size: 20,
-                    color: AppTheme.secondaryBlue,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateFormat('HH:mm').format(trip.departureTime),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+              if (!isOwner)
+                Positioned(
+                  top: 60,
+                  right: 20,
+                  child: IconButton.filled(
+                    style: IconButton.styleFrom(
+                      backgroundColor: isInterested
+                          ? AppTheme.primaryGreen
+                          : Colors.white,
+                      foregroundColor: isInterested
+                          ? Colors.white
+                          : AppTheme.primaryGreen,
+                      side: BorderSide(
+                        color: AppTheme.primaryGreen.withOpacity(0.2),
+                      ),
+                      shadowColor: AppTheme.primaryGreen.withOpacity(0.3),
+                      elevation: 8,
+                    ),
+                    onPressed: () {
+                      ref
+                          .read(tripsProvider.notifier)
+                          .toggleInterest(trip.id, user);
+                    },
+                    icon: Icon(
+                      isInterested ? Icons.check_circle : Icons.add_task,
                     ),
                   ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.location_on,
-                    size: 20,
-                    color: AppTheme.secondaryBlue,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${trip.pickupPoints.length} pickup points',
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                ],
-              ),
+                ),
             ],
           ),
         ),

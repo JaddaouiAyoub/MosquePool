@@ -5,30 +5,49 @@ import '../models/trip.dart';
 import '../providers/trips_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
-class AddTripScreen extends ConsumerStatefulWidget {
-  const AddTripScreen({super.key});
+class EditTripScreen extends ConsumerStatefulWidget {
+  final Trip trip;
+  const EditTripScreen({super.key, required this.trip});
 
   @override
-  ConsumerState<AddTripScreen> createState() => _AddTripScreenState();
+  ConsumerState<EditTripScreen> createState() => _EditTripScreenState();
 }
 
-class _AddTripScreenState extends ConsumerState<AddTripScreen> {
+class _EditTripScreenState extends ConsumerState<EditTripScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _mosqueController = TextEditingController();
-  final _departureController = TextEditingController();
-  final _seatsController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
-  final List<TextEditingController> _pickupControllers = [
-    TextEditingController(),
-  ];
+  late TextEditingController _mosqueController;
+  late TextEditingController _departureController;
+  late TextEditingController _seatsController;
+  late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
+  late List<TextEditingController> _pickupControllers;
+
+  @override
+  void initState() {
+    super.initState();
+    _mosqueController = TextEditingController(text: widget.trip.mosqueName);
+    _departureController = TextEditingController(
+      text: widget.trip.departurePoint,
+    );
+    _seatsController = TextEditingController(
+      text: widget.trip.seatsAvailable.toString(),
+    );
+    _selectedDate = widget.trip.departureTime;
+    _selectedTime = TimeOfDay.fromDateTime(widget.trip.departureTime);
+    _pickupControllers = widget.trip.pickupPoints
+        .map((p) => TextEditingController(text: p))
+        .toList();
+    if (_pickupControllers.isEmpty) {
+      _pickupControllers.add(TextEditingController());
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() => _selectedDate = picked);
@@ -54,12 +73,8 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         title: const Text(
-          'Offer a Ride',
+          'Modify Trip',
           style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Form(
@@ -69,61 +84,33 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           children: [
             _buildScheduleCard(),
             const SizedBox(height: 24),
-            TextFormField(
+            _buildTextField(
               controller: _departureController,
-              decoration: InputDecoration(
-                labelText: 'From (Departure Point)',
-                prefixIcon: const Icon(
-                  Icons.my_location,
-                  color: AppTheme.secondaryBlue,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              validator: (val) => val!.isEmpty ? 'Field required' : null,
+              label: 'From (Departure Point)',
+              icon: Icons.my_location,
+              iconColor: AppTheme.secondaryBlue,
             ),
             const SizedBox(height: 16),
-            TextFormField(
+            _buildTextField(
               controller: _mosqueController,
-              decoration: InputDecoration(
-                labelText: 'To (Mosque)',
-                prefixIcon: const Icon(
-                  Icons.mosque,
-                  color: AppTheme.primaryGreen,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              validator: (val) => val!.isEmpty ? 'Field required' : null,
+              label: 'To (Mosque)',
+              icon: Icons.mosque,
+              iconColor: AppTheme.primaryGreen,
             ),
             const SizedBox(height: 16),
-            TextFormField(
+            _buildTextField(
               controller: _seatsController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Available Seats',
-                prefixIcon: const Icon(Icons.event_seat, color: Colors.orange),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              validator: (val) => val!.isEmpty ? 'Field required' : null,
+              label: 'Available Seats',
+              icon: Icons.event_seat,
+              iconColor: Colors.orange,
+              isNumber: true,
             ),
             const SizedBox(height: 32),
-            _buildPickupSection(),
+            _buildPickupPointsHeader(),
+            const SizedBox(height: 8),
+            ..._buildPickupPointsList(),
             const SizedBox(height: 48),
-            _buildSubmitButton(),
+            _buildSaveButton(),
             const SizedBox(height: 32),
           ],
         ),
@@ -204,60 +191,80 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
     );
   }
 
-  Widget _buildPickupSection() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Pickup Points',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            TextButton.icon(
-              onPressed: () => setState(
-                () => _pickupControllers.add(TextEditingController()),
-              ),
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text('Add stop'),
-            ),
-          ],
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required Color iconColor,
+    bool isNumber = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: iconColor),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
-        const SizedBox(height: 8),
-        ..._pickupControllers.asMap().entries.map((entry) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: TextFormField(
-              controller: entry.value,
-              decoration: InputDecoration(
-                labelText: 'Stop ${entry.key + 1}',
-                prefixIcon: const Icon(Icons.push_pin_outlined, size: 20),
-                suffixIcon: _pickupControllers.length > 1
-                    ? IconButton(
-                        icon: const Icon(
-                          Icons.remove_circle_outline,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: () => setState(
-                          () => _pickupControllers.removeAt(entry.key),
-                        ),
-                      )
-                    : null,
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          );
-        }),
+      ),
+      validator: (val) => val!.isEmpty ? 'Field required' : null,
+    );
+  }
+
+  Widget _buildPickupPointsHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'Pickup Points',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        TextButton.icon(
+          onPressed: () =>
+              setState(() => _pickupControllers.add(TextEditingController())),
+          icon: const Icon(Icons.add_circle_outline),
+          label: const Text('Add stop'),
+        ),
       ],
     );
   }
 
-  Widget _buildSubmitButton() {
+  List<Widget> _buildPickupPointsList() {
+    return _pickupControllers.asMap().entries.map((entry) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: TextFormField(
+          controller: entry.value,
+          decoration: InputDecoration(
+            labelText: 'Stop ${entry.key + 1}',
+            prefixIcon: const Icon(Icons.push_pin_outlined, size: 20),
+            suffixIcon: _pickupControllers.length > 1
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.remove_circle_outline,
+                      color: Colors.redAccent,
+                    ),
+                    onPressed: () =>
+                        setState(() => _pickupControllers.removeAt(entry.key)),
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildSaveButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.primaryGreen,
@@ -269,7 +276,6 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
       ),
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          final user = ref.read(profileProvider);
           final departureDateTime = DateTime(
             _selectedDate.year,
             _selectedDate.month,
@@ -278,10 +284,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
             _selectedTime.minute,
           );
 
-          final newTrip = Trip(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            driverId: user.id,
-            driverName: user.fullName,
+          final updatedTrip = widget.trip.copyWith(
             departurePoint: _departureController.text,
             mosqueName: _mosqueController.text,
             seatsAvailable: int.parse(_seatsController.text),
@@ -292,16 +295,12 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                 .toList(),
           );
 
-          ref
-              .read(tripsProvider.notifier)
-              .updateTrip(
-                newTrip,
-              ); // updateTrip adds if doesn't exist in my mock logic
+          ref.read(tripsProvider.notifier).updateTrip(updatedTrip);
           Navigator.pop(context);
         }
       },
       child: const Text(
-        'Publish Trip',
+        'Save Changes',
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
