@@ -10,7 +10,10 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trips = ref.watch(tripsProvider);
+    final allTrips = ref.watch(tripsProvider);
+    final user = ref.watch(profileProvider);
+    
+    final trips = allTrips.where((t) => t.driverId != user.id).toList();
 
     return Scaffold(
       body: CustomScrollView(

@@ -1,25 +1,68 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/trip.dart';
 import '../../auth/models/user_model.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../notifications/models/notification_model.dart';
 import '../../notifications/providers/notifications_provider.dart';
+import '../data/trip_repository.dart';
+
+// --- Repository Provider ---
+final tripRepositoryProvider = Provider<TripRepository>((ref) => TripRepository());
 
 // --- Profile Provider ---
 
 class ProfileNotifier extends Notifier<UserModel> {
+  static final _emptyUser = UserModel(id: '', firstName: '', lastName: '', email: '', phone: '');
+
   @override
   UserModel build() {
-    return UserModel(
-      id: 'me',
-      firstName: 'Manal',
-      lastName: 'Alami',
-      email: 'manal@example.com',
-      phone: '+33 6 12 34 56 78',
-    );
+    final authState = ref.watch(authStateProvider);
+    
+    authState.whenData((fbUser) {
+      if (fbUser != null) {
+        // Perform async fetch. Microtask ensures we don't update state during build.
+        Future.microtask(() => _fetchUserData(fbUser.uid));
+      } else {
+        Future.microtask(() => state = _emptyUser);
+      }
+    });
+
+    return _emptyUser;
   }
 
-  void setUser(UserModel user) {
-    state = user;
+  Future<void> _fetchUserData(String uid) async {
+    final userData = await ref.read(authRepositoryProvider).getUserData(uid);
+    if (userData != null && state.id != userData.id) {
+      state = userData;
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    final user = await ref.read(authRepositoryProvider).login(email: email, password: password);
+    if (user != null) state = user;
+  }
+
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String phone,
+  }) async {
+    final user = await ref.read(authRepositoryProvider).signUp(
+      email: email,
+      password: password,
+      firstName: firstName,
+      lastName: lastName,
+      phone: phone,
+    );
+    if (user != null) state = user;
+  }
+
+  Future<void> signOut() async {
+    await ref.read(authRepositoryProvider).signOut();
+    state = _emptyUser;
   }
 
   void updateProfile({String? firstName, String? lastName, String? email, String? phone}) {
@@ -39,63 +82,29 @@ final profileProvider = NotifierProvider<ProfileNotifier, UserModel>(
 // --- Trips Provider ---
 
 class TripsNotifier extends Notifier<List<Trip>> {
+  TripRepository get _repository => ref.read(tripRepositoryProvider);
+  StreamSubscription? _subscription;
+
   @override
   List<Trip> build() {
-    return _initialTrips;
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
+    
+    _listenToTrips();
+    return [];
   }
 
-  static final List<Trip> _initialTrips = [
-    Trip(
-      id: '1',
-      driverId: 'd1',
-      driverName: 'Ahmed Malik',
-      departurePoint: 'Nanterre Ville',
-      mosqueName: 'Grande Mosquée de Paris',
-      mosqueAddress: '2 bis Place du Puits de l\'Ermite, 75005 Paris',
-      mosqueLat: 48.8422,
-      mosqueLng: 2.3556,
-      departureTime: DateTime.now().add(const Duration(hours: 1)),
-      seatsAvailable: 3,
-      pickupPoints: ['Porte Maillot', 'Châtelet', 'République'],
-    ),
-    Trip(
-      id: '2',
-      driverId: 'me',
-      driverName: 'Manal Alami',
-      departurePoint: 'Lyon Part-Dieu',
-      mosqueName: 'Mosquée de Lyon',
-      mosqueAddress: '2 Place du Pont, 69007 Lyon',
-      mosqueLat: 45.7500,
-      mosqueLng: 4.8400,
-      departureTime: DateTime.now().add(const Duration(minutes: 45)),
-      seatsAvailable: 1,
-      pickupPoints: ['Place Bellecour', 'Villeurbanne'],
-      interestedUsers: [
-        UserModel(
-          id: 'u1',
-          firstName: 'Karim',
-          lastName: 'Bennani',
-          email: 'karim@example.com',
-          phone: '+33 7 88 99 00 11',
-        ),
-      ],
-    ),
-    Trip(
-      id: '3',
-      driverId: 'd3',
-      driverName: 'Karim Saidi',
-      departurePoint: 'Marseille Saint-Charles',
-      mosqueName: 'Mosquée de Marseille',
-      mosqueAddress: '2 Rue de la Butte, 13001 Marseille',
-      mosqueLat: 43.3000,
-      mosqueLng: 5.3700,
-      departureTime: DateTime.now().add(const Duration(hours: 2)),
-      seatsAvailable: 4,
-      pickupPoints: ['Vieux Port', 'Castellane'],
-    ),
-  ];
+  void _listenToTrips() {
+    _subscription?.cancel();
+    _subscription = _repository.getActiveTrips().listen((trips) {
+      state = trips;
+    });
+  }
 
-  void toggleInterest(String tripId, UserModel currentUser) {
+  Future<void> toggleInterest(String tripId, UserModel currentUser) async {
+    if (currentUser.id.isEmpty) return;
+    
     final trip = state.firstWhere((t) => t.id == tripId);
 
     // Cannot join own trip
@@ -103,69 +112,67 @@ class TripsNotifier extends Notifier<List<Trip>> {
 
     final isAlreadyInterested = trip.getIsInterested(currentUser.id);
 
-    // Emit notification to trip owner
-    final notifier = ref.read(notificationsProvider.notifier);
-    if (isAlreadyInterested) {
+    // 1. Check Interaction Limit
+    if (!trip.canToggle(currentUser.id)) {
+      throw Exception("You have reached the limit of interest changes for this trip.");
+    }
+
+    // 2. Check Seat Availability if joining
+    if (!isAlreadyInterested && trip.seatsAvailable <= 0) {
+      throw Exception("This trip is already full.");
+    }
+
+    // 3. Optimistic Update
+    final originalState = state;
+    final updatedTrip = trip.copyWith(
+      seatsAvailable: isAlreadyInterested ? trip.seatsAvailable + 1 : trip.seatsAvailable - 1,
+      interestedUsers: isAlreadyInterested 
+          ? trip.interestedUsers.where((u) => u.id != currentUser.id).toList()
+          : [...trip.interestedUsers, currentUser],
+      interactionCounts: {
+        ...trip.interactionCounts,
+        currentUser.id: (trip.interactionCounts[currentUser.id] ?? 0) + 1,
+      },
+    );
+    state = state.map((t) => t.id == tripId ? updatedTrip : t).toList();
+
+    try {
+      final userData = currentUser.toMap();
+      if (isAlreadyInterested) {
+        await _repository.leaveTrip(tripId, userData);
+      } else {
+        await _repository.joinTrip(tripId, userData);
+      }
+
+      // 4. Notification (Done after server success)
+      final notifier = ref.read(notificationsProvider.notifier);
       notifier.addNotification(
+        trip.driverId,
         AppNotification(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           tripId: tripId,
-          title: '${currentUser.fullName} is no longer interested',
-          body:
-              '${currentUser.fullName} cancelled their seat for your trip to ${trip.mosqueName}.',
+          title: isAlreadyInterested 
+              ? '${currentUser.fullName} is no longer interested' 
+              : '${currentUser.fullName} is interested!',
+          body: isAlreadyInterested
+              ? '${currentUser.fullName} cancelled their seat for your trip to ${trip.mosqueName}.'
+              : '${currentUser.fullName} wants to join your trip to ${trip.mosqueName}. Phone: ${currentUser.phone}',
           createdAt: DateTime.now(),
         ),
       );
-    } else {
-      if (trip.seatsAvailable <= 0) return;
-      notifier.addNotification(
-        AppNotification(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          tripId: tripId,
-          title: '${currentUser.fullName} is interested!',
-          body:
-              '${currentUser.fullName} wants to join your trip to ${trip.mosqueName}. Phone: ${currentUser.phone}',
-          createdAt: DateTime.now(),
-        ),
-      );
-    }
-
-    state = [
-      for (final t in state)
-        if (t.id == tripId) _applyToggle(t, currentUser) else t,
-    ];
-  }
-
-  Trip _applyToggle(Trip trip, UserModel user) {
-    if (trip.driverId == user.id) return trip;
-
-    final isAlreadyInterested = trip.getIsInterested(user.id);
-
-    if (isAlreadyInterested) {
-      return trip.copyWith(
-        interestedUsers: trip.interestedUsers
-            .where((u) => u.id != user.id)
-            .toList(),
-        seatsAvailable: trip.seatsAvailable + 1,
-      );
-    } else {
-      if (trip.seatsAvailable <= 0) return trip;
-      return trip.copyWith(
-        interestedUsers: [...trip.interestedUsers, user],
-        seatsAvailable: trip.seatsAvailable - 1,
-      );
+    } catch (e) {
+      // Revert on error
+      state = originalState;
+      rethrow;
     }
   }
 
-  void updateTrip(Trip updatedTrip) {
-    bool exists = state.any((t) => t.id == updatedTrip.id);
-    if (exists) {
-      state = [
-        for (final trip in state)
-          if (trip.id == updatedTrip.id) updatedTrip else trip,
-      ];
+  Future<void> updateTrip(Trip trip) async {
+    // If ID is numeric (mock time-based), it's a new trip in our UI logic
+    if (trip.id.length > 10 && int.tryParse(trip.id) != null) {
+      await _repository.createTrip(trip);
     } else {
-      state = [updatedTrip, ...state];
+      await _repository.updateTrip(trip);
     }
   }
 }

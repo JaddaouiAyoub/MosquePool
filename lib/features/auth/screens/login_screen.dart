@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_logo.dart';
 import '../providers/auth_provider.dart';
+import '../../trips/providers/trips_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +19,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -29,28 +31,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(userProvider.notifier).login(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
-
-    final authState = ref.read(userProvider);
-    if (authState.hasError && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authState.error.toString()),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else if (authState.hasValue && authState.value != null) {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(profileProvider.notifier).login(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
       if (mounted) context.go('/');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(userProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = _isLoading;
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -26,6 +26,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
   String? _selectedMosqueAddress;
   double? _selectedMosqueLat;
   double? _selectedMosqueLng;
+  bool _isLoading = false;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -295,46 +296,64 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
         elevation: 8,
         shadowColor: AppTheme.primaryGreen.withOpacity(0.4),
       ),
-      onPressed: () {
+      onPressed: () async {
         if (_formKey.currentState!.validate()) {
-          final user = ref.read(profileProvider);
-          final departureDateTime = DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day,
-            _selectedTime.hour,
-            _selectedTime.minute,
-          );
+          setState(() => _isLoading = true);
+          try {
+            final user = ref.read(profileProvider);
+            if (user.id.isEmpty) {
+              throw Exception("User profile not loaded. Please wait a moment.");
+            }
+            
+            final departureDateTime = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedTime.hour,
+              _selectedTime.minute,
+            );
 
-          final newTrip = Trip(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            driverId: user.id,
-            driverName: user.fullName,
-            departurePoint: _departureController.text,
-            mosqueName: _mosqueController.text,
-            mosqueAddress: _selectedMosqueAddress ?? '',
-            mosqueLat: _selectedMosqueLat,
-            mosqueLng: _selectedMosqueLng,
-            seatsAvailable: int.parse(_seatsController.text),
-            departureTime: departureDateTime,
-            pickupPoints: _pickupControllers
-                .map((c) => c.text)
-                .where((t) => t.isNotEmpty)
-                .toList(),
-          );
+            final newTrip = Trip(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              driverId: user.id,
+              driverName: user.fullName,
+              departurePoint: _departureController.text,
+              mosqueName: _mosqueController.text,
+              mosqueAddress: _selectedMosqueAddress ?? '',
+              mosqueLat: _selectedMosqueLat,
+              mosqueLng: _selectedMosqueLng,
+              seatsAvailable: int.parse(_seatsController.text),
+              departureTime: departureDateTime,
+              createdAt: DateTime.now(),
+              pickupPoints: _pickupControllers
+                  .map((c) => c.text)
+                  .where((t) => t.isNotEmpty)
+                  .toList(),
+            );
 
-          ref
-              .read(tripsProvider.notifier)
-              .updateTrip(
-                newTrip,
-              ); // updateTrip adds if doesn't exist in my mock logic
-          Navigator.pop(context);
+            await ref.read(tripsProvider.notifier).updateTrip(newTrip);
+            if (mounted) Navigator.pop(context);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+              );
+            }
+          } finally {
+            if (mounted) setState(() => _isLoading = false);
+          }
         }
       },
-      child: const Text(
-        'Publish Trip',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      child: _isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+            )
+          : const Text(
+              'Publish Trip',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
     );
   }
 }

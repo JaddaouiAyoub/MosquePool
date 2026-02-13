@@ -12,10 +12,12 @@ class Trip {
   final double? mosqueLat;
   final double? mosqueLng;
   final DateTime departureTime;
+  final DateTime createdAt;
   final int seatsAvailable;
   final List<String> pickupPoints;
   final TripStatus status;
   final List<UserModel> interestedUsers;
+  final Map<String, int> interactionCounts;
 
   Trip({
     required this.id,
@@ -27,16 +29,20 @@ class Trip {
     this.mosqueLat,
     this.mosqueLng,
     required this.departureTime,
+    required this.createdAt,
     required this.seatsAvailable,
     required this.pickupPoints,
     this.status = TripStatus.active,
     this.interestedUsers = const [],
+    this.interactionCounts = const {},
   });
 
   bool get isFull => seatsAvailable <= 0;
 
   bool getIsInterested(String userId) =>
       interestedUsers.any((u) => u.id == userId);
+
+  bool canToggle(String userId) => (interactionCounts[userId] ?? 0) < 4;
 
   Trip copyWith({
     int? seatsAvailable,
@@ -47,7 +53,9 @@ class Trip {
     double? mosqueLat,
     double? mosqueLng,
     DateTime? departureTime,
+    DateTime? createdAt,
     List<String>? pickupPoints,
+    Map<String, int>? interactionCounts,
   }) {
     return Trip(
       id: id,
@@ -59,10 +67,70 @@ class Trip {
       mosqueLat: mosqueLat ?? this.mosqueLat,
       mosqueLng: mosqueLng ?? this.mosqueLng,
       departureTime: departureTime ?? this.departureTime,
+      createdAt: createdAt ?? this.createdAt,
       seatsAvailable: seatsAvailable ?? this.seatsAvailable,
       pickupPoints: pickupPoints ?? this.pickupPoints,
       status: status,
       interestedUsers: interestedUsers ?? this.interestedUsers,
+      interactionCounts: interactionCounts ?? this.interactionCounts,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'driverId': driverId,
+      'driverName': driverName,
+      'departurePoint': departurePoint,
+      'mosqueName': mosqueName,
+      'mosqueAddress': mosqueAddress,
+      'mosqueLat': mosqueLat,
+      'mosqueLng': mosqueLng,
+      'departureTime': departureTime.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'seatsAvailable': seatsAvailable,
+      'pickupPoints': pickupPoints,
+      'status': status.name,
+      'interactionCounts': interactionCounts,
+      'interestedUsers': interestedUsers.map((u) => {
+        'id': u.id,
+        'firstName': u.firstName,
+        'lastName': u.lastName,
+        'email': u.email,
+        'phone': u.phone,
+      }).toList(),
+    };
+  }
+
+  factory Trip.fromMap(String id, Map<String, dynamic> map) {
+    return Trip(
+      id: id,
+      driverId: map['driverId'] ?? '',
+      driverName: map['driverName'] ?? '',
+      departurePoint: map['departurePoint'] ?? '',
+      mosqueName: map['mosqueName'] ?? '',
+      mosqueAddress: map['mosqueAddress'] ?? '',
+      mosqueLat: (map['mosqueLat'] as num?)?.toDouble(),
+      mosqueLng: (map['mosqueLng'] as num?)?.toDouble(),
+      departureTime: DateTime.parse(map['departureTime']),
+      createdAt: map['createdAt'] != null 
+          ? DateTime.parse(map['createdAt']) 
+          : DateTime.now(),
+      seatsAvailable: map['seatsAvailable'] ?? 0,
+      pickupPoints: List<String>.from(map['pickupPoints'] ?? []),
+      status: TripStatus.values.firstWhere(
+        (e) => e.name == map['status'],
+        orElse: () => TripStatus.active,
+      ),
+      interactionCounts: Map<String, int>.from(map['interactionCounts'] ?? {}),
+      interestedUsers: (map['interestedUsers'] as List? ?? [])
+          .map((u) => UserModel(
+                id: u['id'],
+                firstName: u['firstName'] ?? '',
+                lastName: u['lastName'] ?? '',
+                email: u['email'] ?? '',
+                phone: u['phone'] ?? '',
+              ))
+          .toList(),
     );
   }
 }

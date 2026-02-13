@@ -25,4 +25,25 @@ class AppNotification {
       isRead: isRead ?? this.isRead,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'tripId': tripId,
+      'title': title,
+      'body': body,
+      'createdAt': createdAt.toIso8601String(),
+      'isRead': isRead,
+    };
+  }
+
+  factory AppNotification.fromMap(String id, Map<String, dynamic> map) {
+    return AppNotification(
+      id: id,
+      tripId: map['tripId'] ?? '',
+      title: map['title'] ?? '',
+      body: map['body'] ?? '',
+      createdAt: DateTime.parse(map['createdAt']),
+      isRead: map['isRead'] ?? false,
+    );
+  }
 }

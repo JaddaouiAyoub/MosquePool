@@ -37,13 +37,16 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     navigatorKey: _rootNavigatorKey,
     redirect: (context, state) async {
-      // 1. Check Onboarding
+      // 1. Wait for Auth state to initialize
+      if (authState.isLoading) return null;
+
+      // 2. Check Onboarding
       if (!onboardingSeen) {
         if (state.matchedLocation == '/onboarding') return null;
         return '/onboarding';
       }
 
-      // 2. Check Auth State
+      // 3. Check Auth State
       final isLoggedIn = authState.value != null;
       final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
 
@@ -52,12 +55,8 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      // 3. Sync User Model if just logged in
+      // 4. Redirect from auth screens to home if already logged in
       if (isLoggedIn && isLoggingIn) {
-        final userData = await authRepo.getUserData(authState.value!.uid);
-        if (userData != null) {
-          ref.read(profileProvider.notifier).setUser(userData);
-        }
         return '/';
       }
 

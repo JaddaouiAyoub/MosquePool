@@ -81,6 +81,18 @@ class AuthRepository {
           email: data['email'] ?? '',
           phone: data['phone'] ?? '',
         );
+      } else {
+        // Fallback for users who exist in Auth but not in Firestore
+        final fbUser = _auth.currentUser;
+        if (fbUser != null && fbUser.uid == uid) {
+          return UserModel(
+            id: uid,
+            firstName: fbUser.displayName?.split(' ').first ?? 'User',
+            lastName: fbUser.displayName?.split(' ').last ?? '',
+            email: fbUser.email ?? '',
+            phone: '',
+          );
+        }
       }
     } catch (e) {
       print('Error fetching user data: $e');

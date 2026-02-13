@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
 import '../providers/trips_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/time_utils.dart';
 
 class TripDetailsScreen extends ConsumerWidget {
   final Trip trip;
@@ -62,6 +63,21 @@ class TripDetailsScreen extends ConsumerWidget {
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          "Published ${formatTimeAgo(currentTrip.createdAt)}",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -304,13 +320,42 @@ class TripDetailsScreen extends ConsumerWidget {
               ),
               elevation: 4,
             ),
-            onPressed: () {
-              ref
-                  .read(tripsProvider.notifier)
-                  .toggleInterest(currentTrip.id, user);
+            onPressed: () async {
+              final canToggle = currentTrip.canToggle(user.id);
+              final isFull = currentTrip.isFull;
+              final isBlocked = !canToggle;
+
+              if (isBlocked || (isFull && !isInterested)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(isBlocked
+                        ? "You have reached the limit of interest changes for this trip."
+                        : "This trip is full."),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                await ref
+                    .read(tripsProvider.notifier)
+                    .toggleInterest(currentTrip.id, user);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             child: Text(
-              isInterested ? "Joined ✅" : "Join this Trip",
+              !currentTrip.canToggle(user.id)
+                  ? "Interaction Limited 🚫"
+                  : (isInterested ? "Joined ✅" : (currentTrip.isFull ? "Trip Full 🛑" : "Join this Trip")),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/trip.dart';
 import '../providers/trips_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/time_utils.dart';
 
 class TripCard extends ConsumerWidget {
   final Trip trip;
@@ -71,35 +72,26 @@ class TripCard extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        if (isOwner) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.secondaryBlue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              "MY TRIP",
-                              style: TextStyle(
-                                fontSize: 10,
+                        const Spacer(),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              DateFormat('HH:mm').format(trip.departureTime),
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
+                                fontSize: 18,
                                 color: AppTheme.secondaryBlue,
                               ),
                             ),
-                          ),
-                        ],
-                        const Spacer(),
-                        Text(
-                          DateFormat('HH:mm').format(trip.departureTime),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: AppTheme.secondaryBlue,
-                          ),
+                            Text(
+                              formatTimeAgo(trip.createdAt),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -208,29 +200,61 @@ class TripCard extends ConsumerWidget {
                 Positioned(
                   top: 60,
                   right: 20,
-                  child: IconButton.filled(
-                    style: IconButton.styleFrom(
-                      backgroundColor: isInterested
-                          ? AppTheme.primaryGreen
-                          : Colors.white,
-                      foregroundColor: isInterested
-                          ? Colors.white
-                          : AppTheme.primaryGreen,
-                      side: BorderSide(
-                        color: AppTheme.primaryGreen.withOpacity(0.2),
+                  child: Builder(builder: (context) {
+                    final canToggle = trip.canToggle(user.id);
+                    final isFull = trip.isFull;
+                    final isBlocked = !canToggle;
+
+                    return IconButton.filled(
+                      style: IconButton.styleFrom(
+                        backgroundColor: isInterested
+                            ? AppTheme.primaryGreen
+                            : (isBlocked || isFull ? Colors.grey.shade300 : Colors.white),
+                        foregroundColor: isInterested
+                            ? Colors.white
+                            : (isBlocked || isFull ? Colors.grey.shade500 : AppTheme.primaryGreen),
+                        side: BorderSide(
+                          color: isInterested
+                              ? Colors.transparent
+                              : AppTheme.primaryGreen.withOpacity(0.2),
+                        ),
+                        shadowColor: AppTheme.primaryGreen.withOpacity(0.3),
+                        elevation: isBlocked || isFull ? 0 : 8,
                       ),
-                      shadowColor: AppTheme.primaryGreen.withOpacity(0.3),
-                      elevation: 8,
-                    ),
-                    onPressed: () {
-                      ref
-                          .read(tripsProvider.notifier)
-                          .toggleInterest(trip.id, user);
-                    },
-                    icon: Icon(
-                      isInterested ? Icons.check_circle : Icons.add_task,
-                    ),
-                  ),
+                      onPressed: isBlocked || (isFull && !isInterested)
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(isBlocked
+                                      ? "You have reached the limit of changes for this trip."
+                                      : "This trip is full."),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                          : () async {
+                              try {
+                                await ref
+                                    .read(tripsProvider.notifier)
+                                    .toggleInterest(trip.id, user);
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      icon: Icon(
+                        isBlocked
+                            ? Icons.block
+                            : (isInterested ? Icons.check_circle : Icons.add_task),
+                      ),
+                    );
+                  }),
                 ),
             ],
           ),

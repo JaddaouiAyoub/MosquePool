@@ -29,4 +29,24 @@ class UserModel {
       phone: phone ?? this.phone,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phone': phone,
+    };
+  }
+
+  factory UserModel.fromMap(String id, Map<String, dynamic> map) {
+    return UserModel(
+      id: id,
+      firstName: map['firstName'] ?? '',
+      lastName: map['lastName'] ?? '',
+      email: map['email'] ?? '',
+      phone: map['phone'] ?? '',
+    );
+  }
 }

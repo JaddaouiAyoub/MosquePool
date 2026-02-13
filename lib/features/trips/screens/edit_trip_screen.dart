@@ -25,6 +25,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
   String? _selectedMosqueAddress;
   double? _selectedMosqueLat;
   double? _selectedMosqueLng;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -302,38 +303,58 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
         elevation: 8,
         shadowColor: AppTheme.primaryGreen.withOpacity(0.4),
       ),
-      onPressed: () {
+      onPressed: () async {
         if (_formKey.currentState!.validate()) {
-          final departureDateTime = DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day,
-            _selectedTime.hour,
-            _selectedTime.minute,
-          );
+          setState(() => _isLoading = true);
+          try {
+            final departureDateTime = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedTime.hour,
+              _selectedTime.minute,
+            );
 
-          final updatedTrip = widget.trip.copyWith(
-            departurePoint: _departureController.text,
-            mosqueName: _mosqueController.text,
-            mosqueAddress: _selectedMosqueAddress ?? '',
-            mosqueLat: _selectedMosqueLat,
-            mosqueLng: _selectedMosqueLng,
-            seatsAvailable: int.parse(_seatsController.text),
-            departureTime: departureDateTime,
-            pickupPoints: _pickupControllers
-                .map((c) => c.text)
-                .where((t) => t.isNotEmpty)
-                .toList(),
-          );
+            final updatedTrip = widget.trip.copyWith(
+              departurePoint: _departureController.text,
+              mosqueName: _mosqueController.text,
+              mosqueAddress: _selectedMosqueAddress ?? '',
+              mosqueLat: _selectedMosqueLat,
+              mosqueLng: _selectedMosqueLng,
+              seatsAvailable: int.parse(_seatsController.text),
+              departureTime: departureDateTime,
+              pickupPoints: _pickupControllers
+                  .map((c) => c.text)
+                  .where((t) => t.isNotEmpty)
+                  .toList(),
+            );
 
-          ref.read(tripsProvider.notifier).updateTrip(updatedTrip);
-          Navigator.pop(context);
+            await ref.read(tripsProvider.notifier).updateTrip(updatedTrip);
+            if (mounted) Navigator.pop(context);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+              );
+            }
+          } finally {
+            if (mounted) setState(() => _isLoading = false);
+          }
         }
       },
-      child: const Text(
-        'Save Changes',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      child: _isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : const Text(
+              'Save Changes',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
     );
   }
 }

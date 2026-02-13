@@ -1,23 +1,48 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/notification_model.dart';
+import '../data/notification_repository.dart';
+import '../../trips/providers/trips_provider.dart';
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) => NotificationRepository());
 
 class NotificationsNotifier extends Notifier<List<AppNotification>> {
+  NotificationRepository get _repository => ref.read(notificationRepositoryProvider);
+  StreamSubscription? _subscription;
+
   @override
-  List<AppNotification> build() => [];
+  List<AppNotification> build() {
+    final user = ref.watch(profileProvider);
+    
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
 
-  void addNotification(AppNotification notification) {
-    state = [notification, ...state];
+    if (user.id.isNotEmpty) {
+      _listenToNotifications(user.id);
+    }
+    return [];
   }
 
-  void markAsRead(String id) {
-    state = [
-      for (final n in state)
-        if (n.id == id) n.copyWith(isRead: true) else n,
-    ];
+  void _listenToNotifications(String userId) {
+    _subscription?.cancel();
+    _subscription = _repository.getNotifications(userId).listen((notifications) {
+      state = notifications;
+    });
   }
 
-  void markAllAsRead() {
-    state = [for (final n in state) n.copyWith(isRead: true)];
+  Future<void> addNotification(String targetUserId, AppNotification notification) async {
+    await _repository.addNotification(targetUserId, notification);
+  }
+
+  Future<void> markAsRead(String id) async {
+    final user = ref.read(profileProvider);
+    await _repository.markAsRead(user.id, id);
+  }
+
+  Future<void> markAllAsRead() async {
+    final user = ref.read(profileProvider);
+    await _repository.markAllAsRead(user.id);
   }
 
   int get unreadCount => state.where((n) => !n.isRead).length;

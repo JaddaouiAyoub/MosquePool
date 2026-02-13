@@ -121,4 +121,25 @@ final List<Mosque> availableMosques = [
     latitude: 48.8855,
     longitude: 2.3780,
   ),
+  const Mosque(
+    id: 'm16',
+    name: 'Mosquée de la Fraternité',
+    address: '15 Rte de Saint-Leu, 93800 Épinay-sur-Seine',
+    latitude: 48.9554,
+    longitude: 2.3089,
+  ),
+  const Mosque(
+    id: 'm17',
+    name: 'Mosquée d\'Evry',
+    address: '20 Rue Georges Brassens, 91080 Évry-Courcouronnes',
+    latitude: 48.6234,
+    longitude: 2.4419,
+  ),
+  const Mosque(
+    id: 'm18',
+    name: 'Mosquée de Bagnolet',
+    address: '12 Rue de l\'Escale, 93170 Bagnolet',
+    latitude: 48.8687,
+    longitude: 2.4172,
+  ),
 ];

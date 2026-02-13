@@ -27,6 +27,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _phoneController = TextEditingController(text: user.phone);
   }
 
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
   void _toggleEdit() {
     if (_isEditing) {
       ref.read(profileProvider.notifier).updateProfile(
@@ -46,12 +54,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _handleLogout() async {
-    await ref.read(authRepositoryProvider).signOut();
-    // Router will handle redirection to /login
+    await ref.read(profileProvider.notifier).signOut();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen for data updates (e.g. once Firestore load completes)
+    ref.listen(profileProvider, (previous, next) {
+      if (!_isEditing && next.id.isNotEmpty) {
+        _firstNameController.text = next.firstName;
+        _lastNameController.text = next.lastName;
+        _phoneController.text = next.phone;
+      }
+    });
+
     final user = ref.watch(profileProvider);
 
     return Scaffold(
