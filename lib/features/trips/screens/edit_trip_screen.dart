@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/trip.dart';
 import '../providers/trips_provider.dart';
+import '../widgets/mosque_selector_sheet.dart';
 import '../../../core/theme/app_theme.dart';
 
 class EditTripScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,9 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   late List<TextEditingController> _pickupControllers;
+  String? _selectedMosqueAddress;
+  double? _selectedMosqueLat;
+  double? _selectedMosqueLng;
 
   @override
   void initState() {
@@ -37,6 +41,9 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
     _pickupControllers = widget.trip.pickupPoints
         .map((p) => TextEditingController(text: p))
         .toList();
+    _selectedMosqueAddress = widget.trip.mosqueAddress;
+    _selectedMosqueLat = widget.trip.mosqueLat;
+    _selectedMosqueLng = widget.trip.mosqueLng;
     if (_pickupControllers.isEmpty) {
       _pickupControllers.add(TextEditingController());
     }
@@ -91,11 +98,32 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
               iconColor: AppTheme.secondaryBlue,
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _mosqueController,
-              label: 'To (Mosque)',
-              icon: Icons.mosque,
-              iconColor: AppTheme.primaryGreen,
+            InkWell(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => MosqueSelectorSheet(
+                    onSelected: (mosque) {
+                      setState(() {
+                        _mosqueController.text = mosque.name;
+                        _selectedMosqueAddress = mosque.address;
+                        _selectedMosqueLat = mosque.latitude;
+                        _selectedMosqueLng = mosque.longitude;
+                      });
+                    },
+                  ),
+                );
+              },
+              child: IgnorePointer(
+                child: _buildTextField(
+                  controller: _mosqueController,
+                  label: 'To (Mosque)',
+                  icon: Icons.mosque,
+                  iconColor: AppTheme.primaryGreen,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -287,6 +315,9 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
           final updatedTrip = widget.trip.copyWith(
             departurePoint: _departureController.text,
             mosqueName: _mosqueController.text,
+            mosqueAddress: _selectedMosqueAddress ?? '',
+            mosqueLat: _selectedMosqueLat,
+            mosqueLng: _selectedMosqueLng,
             seatsAvailable: int.parse(_seatsController.text),
             departureTime: departureDateTime,
             pickupPoints: _pickupControllers

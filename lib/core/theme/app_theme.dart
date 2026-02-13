@@ -19,7 +19,7 @@ class AppTheme {
       textTheme: GoogleFonts.outfitTextTheme(),
       appBarTheme: const AppBarTheme(
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        // backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

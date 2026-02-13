@@ -8,6 +8,9 @@ class Trip {
   final String driverName;
   final String departurePoint;
   final String mosqueName;
+  final String mosqueAddress;
+  final double? mosqueLat;
+  final double? mosqueLng;
   final DateTime departureTime;
   final int seatsAvailable;
   final List<String> pickupPoints;
@@ -20,6 +23,9 @@ class Trip {
     required this.driverName,
     required this.departurePoint,
     required this.mosqueName,
+    this.mosqueAddress = '',
+    this.mosqueLat,
+    this.mosqueLng,
     required this.departureTime,
     required this.seatsAvailable,
     required this.pickupPoints,
@@ -37,6 +43,9 @@ class Trip {
     List<UserModel>? interestedUsers,
     String? departurePoint,
     String? mosqueName,
+    String? mosqueAddress,
+    double? mosqueLat,
+    double? mosqueLng,
     DateTime? departureTime,
     List<String>? pickupPoints,
   }) {
@@ -46,6 +55,9 @@ class Trip {
       driverName: driverName,
       departurePoint: departurePoint ?? this.departurePoint,
       mosqueName: mosqueName ?? this.mosqueName,
+      mosqueAddress: mosqueAddress ?? this.mosqueAddress,
+      mosqueLat: mosqueLat ?? this.mosqueLat,
+      mosqueLng: mosqueLng ?? this.mosqueLng,
       departureTime: departureTime ?? this.departureTime,
       seatsAvailable: seatsAvailable ?? this.seatsAvailable,
       pickupPoints: pickupPoints ?? this.pickupPoints,

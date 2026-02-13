@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/trip.dart';
 import '../providers/trips_provider.dart';
+import '../widgets/mosque_selector_sheet.dart';
 import '../../../core/theme/app_theme.dart';
 
 class AddTripScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,9 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
   final List<TextEditingController> _pickupControllers = [
     TextEditingController(),
   ];
+  String? _selectedMosqueAddress;
+  double? _selectedMosqueLat;
+  double? _selectedMosqueLng;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -87,22 +91,46 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
               validator: (val) => val!.isEmpty ? 'Field required' : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _mosqueController,
-              decoration: InputDecoration(
-                labelText: 'To (Mosque)',
-                prefixIcon: const Icon(
-                  Icons.mosque,
-                  color: AppTheme.primaryGreen,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+            InkWell(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => MosqueSelectorSheet(
+                    onSelected: (mosque) {
+                      setState(() {
+                        _mosqueController.text = mosque.name;
+                        _selectedMosqueAddress = mosque.address;
+                        _selectedMosqueLat = mosque.latitude;
+                        _selectedMosqueLng = mosque.longitude;
+                      });
+                    },
+                  ),
+                );
+              },
+              child: IgnorePointer(
+                child: TextFormField(
+                  controller: _mosqueController,
+                  decoration: InputDecoration(
+                    labelText: 'To (Mosque)',
+                    hintText: 'Select a mosque...',
+                    prefixIcon: const Icon(
+                      Icons.mosque,
+                      color: AppTheme.primaryGreen,
+                    ),
+                    suffixIcon: const Icon(Icons.arrow_drop_down),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  validator: (val) =>
+                      val!.isEmpty ? 'Please select a mosque' : null,
                 ),
               ),
-              validator: (val) => val!.isEmpty ? 'Field required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -284,6 +312,9 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
             driverName: user.fullName,
             departurePoint: _departureController.text,
             mosqueName: _mosqueController.text,
+            mosqueAddress: _selectedMosqueAddress ?? '',
+            mosqueLat: _selectedMosqueLat,
+            mosqueLng: _selectedMosqueLng,
             seatsAvailable: int.parse(_seatsController.text),
             departureTime: departureDateTime,
             pickupPoints: _pickupControllers

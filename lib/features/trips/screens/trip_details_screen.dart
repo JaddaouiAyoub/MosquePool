@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
 import '../providers/trips_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -84,6 +86,8 @@ class TripDetailsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   _buildFluidRoute(context, currentTrip),
+                  const SizedBox(height: 24),
+                  _buildMosqueAddress(context, currentTrip),
                   const SizedBox(height: 40),
                   _buildStatsRow(currentTrip),
                   const SizedBox(height: 40),
@@ -327,6 +331,134 @@ class TripDetailsScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMosqueAddress(BuildContext context, Trip trip) {
+    if (trip.mosqueAddress.isEmpty) return const SizedBox();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.location_on,
+                size: 18,
+                color: AppTheme.primaryGreen,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  trip.mosqueAddress,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () {
+                _showMapDialog(context, trip);
+              },
+              icon: const Icon(Icons.map_outlined, size: 18),
+              label: const Text("View on Map"),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.primaryGreen,
+                backgroundColor: AppTheme.primaryGreen.withOpacity(0.1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMapDialog(BuildContext context, Trip trip) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(trip.mosqueName),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: trip.mosqueLat != null && trip.mosqueLng != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: FlutterMap(
+                        options: MapOptions(
+                          initialCenter: LatLng(
+                            trip.mosqueLat!,
+                            trip.mosqueLng!,
+                          ),
+                          initialZoom: 15.0,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.example.msq',
+                          ),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: LatLng(trip.mosqueLat!, trip.mosqueLng!),
+                                width: 80,
+                                height: 80,
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                  size: 40,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  : const Center(child: Text("Coordinates missing")),
+            ),
+            const SizedBox(height: 16),
+            Text(trip.mosqueAddress, style: const TextStyle(fontSize: 12)),
+            if (trip.mosqueLat != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  "Coordinates: ${trip.mosqueLat}, ${trip.mosqueLng}",
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
     );
   }
 }

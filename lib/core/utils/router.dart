@@ -6,10 +6,14 @@ import '../../features/trips/screens/my_trips_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/trips/screens/add_trip_screen.dart';
 import '../../features/trips/screens/trip_details_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorHomeKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+final _shellNavigatorNotificationsKey = GlobalKey<NavigatorState>(
+  debugLabel: 'notifications',
+);
 final _shellNavigatorMyTripsKey = GlobalKey<NavigatorState>(
   debugLabel: 'myTrips',
 );
@@ -30,6 +34,15 @@ final routerConfig = GoRouter(
           navigatorKey: _shellNavigatorHomeKey,
           routes: [
             GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          ],
+        ),
+        StatefulShellBranch(
+          navigatorKey: _shellNavigatorNotificationsKey,
+          routes: [
+            GoRoute(
+              path: '/notifications',
+              builder: (context, state) => const NotificationsScreen(),
+            ),
           ],
         ),
         StatefulShellBranch(
