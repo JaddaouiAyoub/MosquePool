@@ -11,13 +11,20 @@ class ProfileNotifier extends Notifier<UserModel> {
   UserModel build() {
     return UserModel(
       id: 'me',
-      fullName: 'Manal Alami',
+      firstName: 'Manal',
+      lastName: 'Alami',
+      email: 'manal@example.com',
       phone: '+33 6 12 34 56 78',
     );
   }
 
-  void updateProfile(String name, String phone) {
-    state = state.copyWith(fullName: name, phone: phone);
+  void updateProfile({String? firstName, String? lastName, String? email, String? phone}) {
+    state = state.copyWith(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phone: phone,
+    );
   }
 }
 
@@ -62,7 +69,9 @@ class TripsNotifier extends Notifier<List<Trip>> {
       interestedUsers: [
         UserModel(
           id: 'u1',
-          fullName: 'Karim Bennani',
+          firstName: 'Karim',
+          lastName: 'Bennani',
+          email: 'karim@example.com',
           phone: '+33 7 88 99 00 11',
         ),
       ],

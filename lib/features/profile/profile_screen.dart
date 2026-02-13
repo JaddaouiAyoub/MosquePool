@@ -12,7 +12,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  late TextEditingController _nameController;
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
   late TextEditingController _phoneController;
   bool _isEditing = false;
 
@@ -20,15 +21,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     final user = ref.read(profileProvider);
-    _nameController = TextEditingController(text: user.fullName);
+    _firstNameController = TextEditingController(text: user.firstName);
+    _lastNameController = TextEditingController(text: user.lastName);
     _phoneController = TextEditingController(text: user.phone);
   }
 
   void _toggleEdit() {
     if (_isEditing) {
-      ref
-          .read(profileProvider.notifier)
-          .updateProfile(_nameController.text, _phoneController.text);
+      ref.read(profileProvider.notifier).updateProfile(
+            firstName: _firstNameController.text,
+            lastName: _lastNameController.text,
+            phone: _phoneController.text,
+          );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile updated successfully!'),
@@ -132,9 +136,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         children: [
           TextField(
-            controller: _nameController,
+            controller: _firstNameController,
             decoration: const InputDecoration(
-              labelText: 'Full Name',
+              labelText: 'First Name',
+              prefixIcon: Icon(
+                Icons.person_outline,
+                color: AppTheme.primaryGreen,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _lastNameController,
+            decoration: const InputDecoration(
+              labelText: 'Last Name',
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: AppTheme.primaryGreen,

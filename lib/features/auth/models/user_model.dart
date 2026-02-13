@@ -1,14 +1,31 @@
 class UserModel {
   final String id;
-  final String fullName;
+  final String firstName;
+  final String lastName;
+  final String email;
   final String phone;
 
-  UserModel({required this.id, required this.fullName, required this.phone});
+  UserModel({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.phone,
+  });
 
-  UserModel copyWith({String? fullName, String? phone}) {
+  String get fullName => '$firstName $lastName';
+
+  UserModel copyWith({
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+  }) {
     return UserModel(
       id: id,
-      fullName: fullName ?? this.fullName,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      email: email ?? this.email,
       phone: phone ?? this.phone,
     );
   }

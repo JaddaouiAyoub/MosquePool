@@ -17,17 +17,19 @@ void main() {
   runApp(const ProviderScope(child: MosquePoolApp()));
 }
 
-class MosquePoolApp extends StatelessWidget {
+class MosquePoolApp extends ConsumerWidget {
   const MosquePoolApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerConfigProvider);
+    
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      routerConfig: routerConfig,
+      routerConfig: router,
     );
   }
 }
