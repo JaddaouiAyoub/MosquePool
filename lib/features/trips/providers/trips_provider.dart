@@ -180,3 +180,29 @@ class TripsNotifier extends Notifier<List<Trip>> {
 final tripsProvider = NotifierProvider<TripsNotifier, List<Trip>>(
   TripsNotifier.new,
 );
+
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  set state(String value) => super.state = value;
+}
+
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
+
+final filteredTripsProvider = Provider<List<Trip>>((ref) {
+  final trips = ref.watch(tripsProvider);
+  final query = ref.watch(searchQueryProvider).toLowerCase();
+  final user = ref.watch(profileProvider);
+
+  return trips.where((trip) {
+    // 1. Filter out own trips
+    if (trip.driverId == user.id) return false;
+    
+    // 2. Filter by search query
+    if (query.isEmpty) return true;
+    return trip.mosqueName.toLowerCase().contains(query) ||
+        trip.departurePoint.toLowerCase().contains(query);
+  }).toList();
+});

@@ -45,6 +45,11 @@ class NotificationsNotifier extends Notifier<List<AppNotification>> {
     await _repository.markAllAsRead(user.id);
   }
 
+  Future<void> deleteNotification(String id) async {
+    final user = ref.read(profileProvider);
+    await _repository.deleteNotification(user.id, id);
+  }
+
   int get unreadCount => state.where((n) => !n.isRead).length;
 }
 

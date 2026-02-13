@@ -53,4 +53,14 @@ class NotificationRepository {
     }
     await batch.commit();
   }
+
+  Future<void> deleteNotification(String userId, String notificationId) async {
+    if (userId.isEmpty || notificationId.isEmpty) return;
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .doc(notificationId)
+        .delete();
+  }
 }
