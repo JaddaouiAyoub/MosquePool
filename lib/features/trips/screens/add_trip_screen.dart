@@ -23,6 +23,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
   final List<TextEditingController> _pickupControllers = [
     TextEditingController(),
   ];
+  String? _selectedMosqueId;
   String? _selectedMosqueAddress;
   double? _selectedMosqueLat;
   double? _selectedMosqueLng;
@@ -102,6 +103,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                     onSelected: (mosque) {
                       setState(() {
                         _mosqueController.text = mosque.name;
+                        _selectedMosqueId = mosque.id;
                         _selectedMosqueAddress = mosque.address;
                         _selectedMosqueLat = mosque.latitude;
                         _selectedMosqueLng = mosque.longitude;
@@ -315,6 +317,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
 
             final newTrip = Trip(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
+              mosqueId: _selectedMosqueId,
               driverId: user.id,
               driverName: user.fullName,
               departurePoint: _departureController.text,

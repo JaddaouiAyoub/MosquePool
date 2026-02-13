@@ -4,6 +4,7 @@ enum TripStatus { active, expired, completed }
 
 class Trip {
   final String id;
+  final String? mosqueId;
   final String driverId;
   final String driverName;
   final String departurePoint;
@@ -21,6 +22,7 @@ class Trip {
 
   Trip({
     required this.id,
+    this.mosqueId,
     required this.driverId,
     required this.driverName,
     required this.departurePoint,
@@ -47,6 +49,7 @@ class Trip {
   Trip copyWith({
     int? seatsAvailable,
     List<UserModel>? interestedUsers,
+    String? mosqueId,
     String? departurePoint,
     String? mosqueName,
     String? mosqueAddress,
@@ -59,6 +62,7 @@ class Trip {
   }) {
     return Trip(
       id: id,
+      mosqueId: mosqueId ?? this.mosqueId,
       driverId: driverId,
       driverName: driverName,
       departurePoint: departurePoint ?? this.departurePoint,
@@ -78,6 +82,7 @@ class Trip {
 
   Map<String, dynamic> toMap() {
     return {
+      'mosqueId': mosqueId,
       'driverId': driverId,
       'driverName': driverName,
       'departurePoint': departurePoint,
@@ -104,6 +109,7 @@ class Trip {
   factory Trip.fromMap(String id, Map<String, dynamic> map) {
     return Trip(
       id: id,
+      mosqueId: map['mosqueId'],
       driverId: map['driverId'] ?? '',
       driverName: map['driverName'] ?? '',
       departurePoint: map['departurePoint'] ?? '',
