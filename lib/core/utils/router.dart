@@ -12,6 +12,8 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/providers/onboarding_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../features/trips/providers/trips_provider.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,10 +30,39 @@ final _shellNavigatorProfileKey = GlobalKey<NavigatorState>(
 
 final routerConfigProvider = Provider<GoRouter>((ref) {
   final onboardingSeen = ref.watch(onboardingProvider);
+  final authState = ref.watch(authStateProvider);
+  final authRepo = ref.watch(authRepositoryProvider);
 
   return GoRouter(
-    initialLocation: onboardingSeen ? '/login' : '/onboarding',
+    initialLocation: '/',
     navigatorKey: _rootNavigatorKey,
+    redirect: (context, state) async {
+      // 1. Check Onboarding
+      if (!onboardingSeen) {
+        if (state.matchedLocation == '/onboarding') return null;
+        return '/onboarding';
+      }
+
+      // 2. Check Auth State
+      final isLoggedIn = authState.value != null;
+      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+
+      if (!isLoggedIn) {
+        if (isLoggingIn || state.matchedLocation == '/onboarding') return null;
+        return '/login';
+      }
+
+      // 3. Sync User Model if just logged in
+      if (isLoggedIn && isLoggingIn) {
+        final userData = await authRepo.getUserData(authState.value!.uid);
+        if (userData != null) {
+          ref.read(profileProvider.notifier).setUser(userData);
+        }
+        return '/';
+      }
+
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/onboarding',

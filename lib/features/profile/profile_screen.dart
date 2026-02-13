@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../trips/providers/trips_provider.dart';
+import '../auth/providers/auth_provider.dart';
 import '../auth/models/user_model.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -33,6 +34,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             lastName: _lastNameController.text,
             phone: _phoneController.text,
           );
+      // TODO: Also update in Firestore if needed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile updated successfully!'),
@@ -41,6 +43,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
     }
     setState(() => _isEditing = !_isEditing);
+  }
+
+  Future<void> _handleLogout() async {
+    await ref.read(authRepositoryProvider).signOut();
+    // Router will handle redirection to /login
   }
 
   @override
@@ -81,7 +88,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildProfileItem(Icons.settings_outlined, 'Settings', () {}),
           _buildProfileItem(Icons.help_outline, 'Help & Support', () {}),
           const Divider(height: 48),
-          _buildProfileItem(Icons.logout, 'Log Out', () {}, color: Colors.red),
+          _buildProfileItem(Icons.logout, 'Log Out', _handleLogout, color: Colors.red),
         ],
       ),
     );

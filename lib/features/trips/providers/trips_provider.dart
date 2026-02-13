@@ -18,6 +18,10 @@ class ProfileNotifier extends Notifier<UserModel> {
     );
   }
 
+  void setUser(UserModel user) {
+    state = user;
+  }
+
   void updateProfile({String? firstName, String? lastName, String? email, String? phone}) {
     state = state.copyWith(
       firstName: firstName,
