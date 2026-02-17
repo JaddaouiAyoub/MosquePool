@@ -39,21 +39,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(profileProvider.notifier).signUp(
+      await ref
+          .read(profileProvider.notifier)
+          .signUp(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
             phone: _phoneController.text.trim(),
           );
-      if (mounted) context.go('/');
+      // Removed context.go('/') as GoRouter handles redirection to /verify-email
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -83,21 +82,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: const AppLogo(size: 60)
-                      .animate()
-                      .scale(duration: 500.ms, curve: Curves.easeOutBack),
+                  child: const AppLogo(size: 60).animate().scale(
+                    duration: 500.ms,
+                    curve: Curves.easeOutBack,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Create Account',
+                  'Créer un compte',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryGreen,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryGreen,
+                  ),
                 ).animate().fadeIn(delay: 200.ms).moveX(begin: -20, end: 0),
                 const SizedBox(height: 8),
                 Text(
-                  'Join MosquePool and start sharing',
+                  'Rejoignez LiftMosque et commencez à partager',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
                 ).animate().fadeIn(delay: 300.ms).moveX(begin: -20, end: 0),
                 const SizedBox(height: 32),
@@ -107,20 +107,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     Expanded(
                       child: _buildTextField(
                         controller: _firstNameController,
-                        label: 'First Name',
-                        hint: 'John',
+                        label: 'Prénom',
+                        hint: 'Ayoub',
                         prefixIcon: Icons.person_outline,
-                        validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                        validator: (v) => v?.isEmpty ?? true ? 'Requis' : null,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTextField(
                         controller: _lastNameController,
-                        label: 'Last Name',
-                        hint: 'Doe',
+                        label: 'Nom',
+                        hint: 'Jaddaoui',
                         prefixIcon: Icons.person_outline,
-                        validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                        validator: (v) => v?.isEmpty ?? true ? 'Requis' : null,
                       ),
                     ),
                   ],
@@ -128,64 +128,77 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 20),
                 _buildTextField(
                   controller: _phoneController,
-                  label: 'Phone Number',
-                  hint: '+1 234 567 890',
+                  label: 'Numéro de téléphone',
+                  hint: '+212 600 000 000',
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
-                  validator: (v) => v?.isEmpty ?? true ? 'Please enter phone number' : null,
+                  validator: (v) => v?.isEmpty ?? true
+                      ? 'Veuillez entrer votre numéro'
+                      : null,
                 ).animate().fadeIn(delay: 500.ms).moveY(begin: 10, end: 0),
                 const SizedBox(height: 20),
                 _buildTextField(
                   controller: _emailController,
-                  label: 'Email Address',
-                  hint: 'name@example.com',
+                  label: 'Adresse E-mail',
+                  hint: 'nom@exemple.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Please enter email';
-                    if (!v.contains('@')) return 'Invalid email';
+                    if (v == null || v.isEmpty)
+                      return 'Veuillez entrer votre e-mail';
+                    if (!v.contains('@')) return 'E-mail invalide';
                     return null;
                   },
                 ).animate().fadeIn(delay: 600.ms).moveY(begin: 10, end: 0),
                 const SizedBox(height: 20),
                 _buildTextField(
                   controller: _passwordController,
-                  label: 'Password',
+                  label: 'Mot de passe',
                   hint: '••••••••',
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
-                  validator: (v) => (v?.length ?? 0) < 6 ? 'Min 6 chars' : null,
+                  validator: (v) =>
+                      (v?.length ?? 0) < 6 ? 'Min 6 caractères' : null,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Colors.grey,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ).animate().fadeIn(delay: 700.ms).moveY(begin: 10, end: 0),
                 const SizedBox(height: 40),
                 ElevatedButton(
-                  onPressed: isLoading ? null : _handleSignup,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('Sign Up'),
-                ).animate().fadeIn(delay: 800.ms).scale(begin: const Offset(0.9, 0.9)),
+                      onPressed: isLoading ? null : _handleSignup,
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text("S'inscrire"),
+                    )
+                    .animate()
+                    .fadeIn(delay: 800.ms)
+                    .scale(begin: const Offset(0.9, 0.9)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Already have an account?",
+                      "Vous avez déjà un compte ?",
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
                     TextButton(
                       onPressed: () => context.pop(),
                       child: const Text(
-                        'Login',
+                        'Se connecter',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -226,7 +239,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           style: const TextStyle(fontSize: 15),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(prefixIcon, color: AppTheme.primaryGreen, size: 20),
+            prefixIcon: Icon(
+              prefixIcon,
+              color: AppTheme.primaryGreen,
+              size: 20,
+            ),
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -241,7 +258,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppTheme.primaryGreen, width: 2),
+              borderSide: const BorderSide(
+                color: AppTheme.primaryGreen,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),

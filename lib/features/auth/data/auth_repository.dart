@@ -16,10 +16,8 @@ class AuthRepository {
     required String phone,
   }) async {
     try {
-      final UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final UserCredential credential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       if (credential.user != null) {
         final userModel = UserModel(
@@ -37,6 +35,9 @@ class AuthRepository {
           'phone': phone,
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        // Send verification email
+        await credential.user?.sendEmailVerification();
 
         return userModel;
       }
@@ -102,6 +103,14 @@ class AuthRepository {
 
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  Future<void> reloadUser() async {
+    await _auth.currentUser?.reload();
+  }
+
+  Future<void> resendVerificationEmail() async {
+    await _auth.currentUser?.sendEmailVerification();
   }
 
   String _handleAuthException(FirebaseAuthException e) {

@@ -74,7 +74,7 @@ class TripDetailsScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          "Published ${formatTimeAgo(currentTrip.createdAt)}",
+                          "Publié ${formatTimeAgo(currentTrip.createdAt)}",
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.8),
                             fontSize: 12,
@@ -96,7 +96,7 @@ class TripDetailsScreen extends ConsumerWidget {
                   _buildDriverProfile(context, isOwner),
                   const SizedBox(height: 40),
                   Text(
-                    "Fluid Journey",
+                    "Itinéraire détaillé",
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -119,7 +119,7 @@ class TripDetailsScreen extends ConsumerWidget {
                   if (isOwner)
                     Center(
                       child: Text(
-                        "You are the driver of this trip",
+                        "Vous êtes le conducteur de ce trajet",
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontStyle: FontStyle.italic,
@@ -165,11 +165,11 @@ class TripDetailsScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isOwner ? "You (Driver)" : trip.driverName,
+              isOwner ? "Vous (Conducteur)" : trip.driverName,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const Text(
-              "Premium Driver • ⭐ 4.9",
+              "Conducteur Premium • ⭐ 4.9",
               style: TextStyle(color: Colors.grey),
             ),
           ],
@@ -255,10 +255,10 @@ class TripDetailsScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     index == 0
-                        ? "Initial Departure"
+                        ? "Départ initial"
                         : (index == stops.length - 1
-                              ? "Final Destination"
-                              : "Pickup point"),
+                              ? "Destination finale"
+                              : "Point de passage"),
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                   ),
                 ],
@@ -277,10 +277,10 @@ class TripDetailsScreen extends ConsumerWidget {
         _buildStatItem(
           Icons.event_seat,
           "${currentTrip.seatsAvailable}",
-          "left",
+          "restantes",
         ),
         _buildStatItem(Icons.timer, "25", "min"),
-        _buildStatItem(Icons.security, "Verified", "trip"),
+        _buildStatItem(Icons.security, "Vérifié", "trajet"),
       ],
     );
   }
@@ -330,8 +330,8 @@ class TripDetailsScreen extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(isBlocked
-                        ? "You have reached the limit of interest changes for this trip."
-                        : "This trip is full."),
+                        ? "Vous avez atteint la limite de modifications pour ce trajet."
+                        : "Ce trajet est complet."),
                     backgroundColor: Colors.orange,
                   ),
                 );
@@ -355,8 +355,8 @@ class TripDetailsScreen extends ConsumerWidget {
             },
             child: Text(
               !currentTrip.canToggle(user.id)
-                  ? "Interaction Limited 🚫"
-                  : (isInterested ? "Joined ✅" : (currentTrip.isFull ? "Trip Full 🛑" : "Join this Trip")),
+                  ? "Interaction limitée 🚫"
+                  : (isInterested ? "Rejoint ✅" : (currentTrip.isFull ? "Complet 🛑" : "Rejoindre ce trajet")),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
@@ -425,7 +425,7 @@ class TripDetailsScreen extends ConsumerWidget {
                 );
               },
               icon: const Icon(Icons.map_outlined, size: 18),
-              label: const Text("View on Map"),
+              label: const Text("Voir sur la carte"),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.primaryGreen,
                 backgroundColor: AppTheme.primaryGreen.withOpacity(0.1),

@@ -37,7 +37,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _toggleEdit() {
     if (_isEditing) {
-      ref.read(profileProvider.notifier).updateProfile(
+      ref
+          .read(profileProvider.notifier)
+          .updateProfile(
             firstName: _firstNameController.text,
             lastName: _lastNameController.text,
             phone: _phoneController.text,
@@ -45,7 +47,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // TODO: Also update in Firestore if needed
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Profile updated successfully!'),
+          content: Text('Profil mis à jour avec succès !'),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
@@ -55,6 +57,79 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _handleLogout() async {
     await ref.read(profileProvider.notifier).signOut();
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        scrollable: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: const [
+            Icon(Icons.info_outline, color: AppTheme.primaryGreen),
+            SizedBox(width: 12),
+            Expanded(
+              // ← Important pour éviter l'overflow
+              child: Text(
+                'À propos de\n LiftMosque',
+                overflow: TextOverflow
+                    .ellipsis, // ou softWrap: true si tu veux plusieurs lignes
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+
+        content: SingleChildScrollView(
+          // ← Ici
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Objectif',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.secondaryBlue,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'LiftMosque est une application communautaire conçue pour faciliter le transport vers les mosquées. '
+                'Notre mission est de renforcer les liens au sein de la communauté tout en encourageant une mobilité durable et solidaire.',
+              ),
+              const Divider(height: 32),
+              Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Développé avec ❤️ au Maroc',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Text(
+                      'par Ayoub Jaddaoui',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -74,7 +149,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text(
-          'My Profile',
+          'Mon Profil',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -92,7 +167,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           _buildEditForm(),
           const SizedBox(height: 32),
           Text(
-            "Account Settings",
+            "Paramètres du compte",
             style: TextStyle(
               color: Colors.grey.shade400,
               fontWeight: FontWeight.bold,
@@ -100,11 +175,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildProfileItem(Icons.history, 'Trip History', () {}),
-          _buildProfileItem(Icons.settings_outlined, 'Settings', () {}),
-          _buildProfileItem(Icons.help_outline, 'Help & Support', () {}),
+          _buildProfileItem(Icons.history, 'Historique des trajets', () {}),
+          _buildProfileItem(Icons.settings_outlined, 'Paramètres', () {}),
+          _buildProfileItem(Icons.help_outline, 'Aide et support', () {}),
+          _buildProfileItem(
+            Icons.info_outline,
+            'À propos',
+            () => _showAboutDialog(context),
+          ),
           const Divider(height: 48),
-          _buildProfileItem(Icons.logout, 'Log Out', _handleLogout, color: Colors.red),
+          _buildProfileItem(
+            Icons.logout,
+            'Déconnexion',
+            _handleLogout,
+            color: Colors.red,
+          ),
         ],
       ),
     );
@@ -161,7 +246,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           TextField(
             controller: _firstNameController,
             decoration: const InputDecoration(
-              labelText: 'First Name',
+              labelText: 'Prénom',
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: AppTheme.primaryGreen,
@@ -172,7 +257,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           TextField(
             controller: _lastNameController,
             decoration: const InputDecoration(
-              labelText: 'Last Name',
+              labelText: 'Nom',
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: AppTheme.primaryGreen,
@@ -183,7 +268,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           TextField(
             controller: _phoneController,
             decoration: const InputDecoration(
-              labelText: 'Phone Number',
+              labelText: 'Numéro de téléphone',
               prefixIcon: Icon(
                 Icons.phone_outlined,
                 color: AppTheme.secondaryBlue,

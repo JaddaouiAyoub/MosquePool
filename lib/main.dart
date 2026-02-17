@@ -16,18 +16,18 @@ void main() async {
       statusBarBrightness: Brightness.light,
     ),
   );
-  runApp(const ProviderScope(child: MosquePoolApp()));
+  runApp(const ProviderScope(child: LiftMosqueApp()));
 }
 
-class MosquePoolApp extends ConsumerWidget {
-  const MosquePoolApp({super.key});
+class LiftMosqueApp extends ConsumerWidget {
+  const LiftMosqueApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerConfigProvider);
     
     return MaterialApp.router(
-      title: AppConstants.appName,
+      title: 'LiftMosque',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

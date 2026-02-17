@@ -38,7 +38,7 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Select Mosque',
+                'Sélectionner une mosquée',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               IconButton(
@@ -52,7 +52,7 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
             controller: _searchController,
             onChanged: (val) => setState(() => _searchQuery = val),
             decoration: InputDecoration(
-              hintText: 'Search by name or city...',
+              hintText: 'Rechercher par nom ou ville...',
               prefixIcon: const Icon(
                 Icons.search,
                 color: AppTheme.primaryGreen,
@@ -87,7 +87,7 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error loading mosques: $err')),
+              error: (err, stack) => Center(child: Text('Erreur lors du chargement des mosquées : $err')),
             ),
           ),
         ],
@@ -107,7 +107,7 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No mosques found',
+            'Aucune mosquée trouvée',
             style: TextStyle(color: Colors.grey.shade400),
           ),
         ],

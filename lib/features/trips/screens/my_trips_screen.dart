@@ -26,13 +26,13 @@ class MyTripsScreen extends ConsumerWidget {
         backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
           title: const Text(
-            'My Journeys',
+            'Mes trajets',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           bottom: const TabBar(
             tabs: [
-              Tab(text: "Published"),
-              Tab(text: "Joined"),
+              Tab(text: "Publiés"),
+              Tab(text: "Rejoints"),
             ],
             indicatorColor: AppTheme.primaryGreen,
             labelColor: AppTheme.primaryGreen,
@@ -68,8 +68,8 @@ class MyTripsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               isPublished
-                  ? "You haven't published any trips yet."
-                  : "You haven't joined any trips yet.",
+                  ? "Vous n'avez pas encore publié de trajets."
+                  : "Vous n'avez pas encore rejoint de trajets.",
               style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
             ),
           ],
@@ -127,7 +127,7 @@ class MyTripsScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                "Interested Participants (${trip.interestedUsers.length})",
+                "Participants intéressés (${trip.interestedUsers.length})",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
@@ -194,7 +194,7 @@ class MyTripsScreen extends ConsumerWidget {
               ),
             ),
             icon: const Icon(Icons.edit_outlined, size: 18),
-            label: const Text("Modify"),
+            label: const Text("Modifier"),
           ),
         ),
         const SizedBox(width: 12),

@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 48),
                 Text(
-                  'Welcome Back',
+                  'Bon retour',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primaryGreen,
@@ -82,31 +82,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ).animate().fadeIn(delay: 200.ms).moveX(begin: -20, end: 0),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to continue your journey',
+                  'Connectez-vous pour continuer votre trajet',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
                 ).animate().fadeIn(delay: 300.ms).moveX(begin: -20, end: 0),
                 const SizedBox(height: 40),
                 _buildTextField(
                   controller: _emailController,
-                  label: 'Email Address',
-                  hint: 'name@example.com',
+                  label: 'Adresse E-mail',
+                  hint: 'nom@exemple.com',
                   prefixIcon: Icons.email_outlined,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Please enter your email';
-                    if (!value.contains('@')) return 'Please enter a valid email';
+                    if (value == null || value.isEmpty) return 'Veuillez entrer votre e-mail';
+                    if (!value.contains('@')) return 'Veuillez entrer un e-mail valide';
                     return null;
                   },
                 ).animate().fadeIn(delay: 400.ms).moveY(begin: 10, end: 0),
                 const SizedBox(height: 20),
                 _buildTextField(
                   controller: _passwordController,
-                  label: 'Password',
+                  label: 'Mot de passe',
                   hint: '••••••••',
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Please enter your password';
-                    if (value.length < 6) return 'Password must be at least 6 characters';
+                    if (value == null || value.isEmpty) return 'Veuillez entrer votre mot de passe';
+                    if (value.length < 6) return 'Le mot de passe doit faire au moins 6 caractères';
                     return null;
                   },
                   suffixIcon: IconButton(
@@ -122,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text('Forgot Password?'),
+                    child: const Text('Mot de passe oublié ?'),
                   ),
                 ).animate().fadeIn(delay: 600.ms),
                 const SizedBox(height: 32),
@@ -134,20 +134,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           width: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text('Login'),
+                      : const Text('Se connecter'),
                 ).animate().fadeIn(delay: 700.ms).scale(begin: const Offset(0.9, 0.9)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account?",
+                      "Vous n'avez pas de compte ?",
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
                     TextButton(
                       onPressed: () => context.push('/signup'),
                       child: const Text(
-                        'Sign Up',
+                        "S'inscrire",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

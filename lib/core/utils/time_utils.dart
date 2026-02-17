@@ -3,16 +3,16 @@ String formatTimeAgo(DateTime dateTime) {
   final difference = now.difference(dateTime);
 
   if (difference.inDays >= 30) {
-    return '${(difference.inDays / 30).floor()}mo ago';
+    return 'il y a ${(difference.inDays / 30).floor()} mois';
   } else if (difference.inDays >= 7) {
-    return '${(difference.inDays / 7).floor()}w ago';
+    return 'il y a ${(difference.inDays / 7).floor()} sem';
   } else if (difference.inDays >= 1) {
-    return '${difference.inDays}d ago';
+    return 'il y a ${difference.inDays} j';
   } else if (difference.inHours >= 1) {
-    return '${difference.inHours}h ago';
+    return 'il y a ${difference.inHours} h';
   } else if (difference.inMinutes >= 1) {
-    return '${difference.inMinutes}m ago';
+    return 'il y a ${difference.inMinutes} min';
   } else {
-    return 'Just now';
+    return "À l'instant";
   }
 }

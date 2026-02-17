@@ -87,7 +87,7 @@ class TripMapScreen extends StatelessWidget {
               ],
             )
           : const Center(
-              child: Text("Mosque coordinates not available"),
+              child: Text("Coordonnées de la mosquée non disponibles"),
             ),
       bottomSheet: Container(
         padding: const EdgeInsets.all(24),
@@ -145,7 +145,7 @@ class TripMapScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text("Got it"),
+                child: const Text("Compris"),
               ),
             ),
           ],

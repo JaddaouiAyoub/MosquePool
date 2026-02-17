@@ -22,7 +22,7 @@ class MainNavigationWrapper extends ConsumerWidget {
           const NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Accueil',
           ),
           NavigationDestination(
             icon: Badge(
@@ -35,17 +35,17 @@ class MainNavigationWrapper extends ConsumerWidget {
               label: Text('$unreadCount'),
               child: const Icon(Icons.notifications),
             ),
-            label: 'Alerts',
+            label: 'Alertes',
           ),
           const NavigationDestination(
             icon: Icon(Icons.history_outlined),
             selectedIcon: Icon(Icons.history),
-            label: 'My Trips',
+            label: 'Mes Trajets',
           ),
           const NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Profil',
           ),
         ],
       ),

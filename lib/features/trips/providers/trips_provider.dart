@@ -8,17 +8,25 @@ import '../../notifications/providers/notifications_provider.dart';
 import '../data/trip_repository.dart';
 
 // --- Repository Provider ---
-final tripRepositoryProvider = Provider<TripRepository>((ref) => TripRepository());
+final tripRepositoryProvider = Provider<TripRepository>(
+  (ref) => TripRepository(),
+);
 
 // --- Profile Provider ---
 
 class ProfileNotifier extends Notifier<UserModel> {
-  static final _emptyUser = UserModel(id: '', firstName: '', lastName: '', email: '', phone: '');
+  static final _emptyUser = UserModel(
+    id: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  );
 
   @override
   UserModel build() {
     final authState = ref.watch(authStateProvider);
-    
+
     authState.whenData((fbUser) {
       if (fbUser != null) {
         // Perform async fetch. Microtask ensures we don't update state during build.
@@ -39,7 +47,9 @@ class ProfileNotifier extends Notifier<UserModel> {
   }
 
   Future<void> login(String email, String password) async {
-    final user = await ref.read(authRepositoryProvider).login(email: email, password: password);
+    final user = await ref
+        .read(authRepositoryProvider)
+        .login(email: email, password: password);
     if (user != null) state = user;
   }
 
@@ -50,13 +60,15 @@ class ProfileNotifier extends Notifier<UserModel> {
     required String lastName,
     required String phone,
   }) async {
-    final user = await ref.read(authRepositoryProvider).signUp(
-      email: email,
-      password: password,
-      firstName: firstName,
-      lastName: lastName,
-      phone: phone,
-    );
+    final user = await ref
+        .read(authRepositoryProvider)
+        .signUp(
+          email: email,
+          password: password,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+        );
     if (user != null) state = user;
   }
 
@@ -65,7 +77,23 @@ class ProfileNotifier extends Notifier<UserModel> {
     state = _emptyUser;
   }
 
-  void updateProfile({String? firstName, String? lastName, String? email, String? phone}) {
+  Future<void> resendVerificationEmail() async {
+    await ref.read(authRepositoryProvider).resendVerificationEmail();
+  }
+
+  Future<void> refreshAuthStatus() async {
+    await ref.read(authRepositoryProvider).reloadUser();
+    // Invalidate authStateProvider so that listeners like GoRouter
+    // see the updated emailVerified status.
+    ref.invalidate(authStateProvider);
+  }
+
+  void updateProfile({
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+  }) {
     state = state.copyWith(
       firstName: firstName,
       lastName: lastName,
@@ -90,7 +118,7 @@ class TripsNotifier extends Notifier<List<Trip>> {
     ref.onDispose(() {
       _subscription?.cancel();
     });
-    
+
     _listenToTrips();
     return [];
   }
@@ -104,7 +132,7 @@ class TripsNotifier extends Notifier<List<Trip>> {
 
   Future<void> toggleInterest(String tripId, UserModel currentUser) async {
     if (currentUser.id.isEmpty) return;
-    
+
     final trip = state.firstWhere((t) => t.id == tripId);
 
     // Cannot join own trip
@@ -114,19 +142,23 @@ class TripsNotifier extends Notifier<List<Trip>> {
 
     // 1. Check Interaction Limit
     if (!trip.canToggle(currentUser.id)) {
-      throw Exception("You have reached the limit of interest changes for this trip.");
+      throw Exception(
+        "Vous avez atteint la limite de modifications pour ce trajet.",
+      );
     }
 
     // 2. Check Seat Availability if joining
     if (!isAlreadyInterested && trip.seatsAvailable <= 0) {
-      throw Exception("This trip is already full.");
+      throw Exception("Ce trajet est complet.");
     }
 
     // 3. Optimistic Update
     final originalState = state;
     final updatedTrip = trip.copyWith(
-      seatsAvailable: isAlreadyInterested ? trip.seatsAvailable + 1 : trip.seatsAvailable - 1,
-      interestedUsers: isAlreadyInterested 
+      seatsAvailable: isAlreadyInterested
+          ? trip.seatsAvailable + 1
+          : trip.seatsAvailable - 1,
+      interestedUsers: isAlreadyInterested
           ? trip.interestedUsers.where((u) => u.id != currentUser.id).toList()
           : [...trip.interestedUsers, currentUser],
       interactionCounts: {
@@ -151,12 +183,12 @@ class TripsNotifier extends Notifier<List<Trip>> {
         AppNotification(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           tripId: tripId,
-          title: isAlreadyInterested 
-              ? '${currentUser.fullName} is no longer interested' 
-              : '${currentUser.fullName} is interested!',
+          title: isAlreadyInterested
+              ? '${currentUser.fullName} n\'est plus intéressé'
+              : '${currentUser.fullName} est intéressé !',
           body: isAlreadyInterested
-              ? '${currentUser.fullName} cancelled their seat for your trip to ${trip.mosqueName}.'
-              : '${currentUser.fullName} wants to join your trip to ${trip.mosqueName}. Phone: ${currentUser.phone}',
+              ? '${currentUser.fullName} a annulé sa place pour votre trajet vers ${trip.mosqueName}.'
+              : '${currentUser.fullName} souhaite rejoindre votre trajet vers ${trip.mosqueName}. Tél: ${currentUser.phone}',
           createdAt: DateTime.now(),
         ),
       );
@@ -199,7 +231,7 @@ final filteredTripsProvider = Provider<List<Trip>>((ref) {
   return trips.where((trip) {
     // 1. Filter out own trips
     if (trip.driverId == user.id) return false;
-    
+
     // 2. Filter by search query
     if (query.isEmpty) return true;
     return trip.mosqueName.toLowerCase().contains(query) ||

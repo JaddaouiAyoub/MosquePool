@@ -23,7 +23,7 @@ class AppLogo extends StatelessWidget {
         if (showText) ...[
           const SizedBox(width: 12),
           Text(
-            'MosquePool',
+            'LiftMosque',
             style: TextStyle(
               fontSize: size * 0.5,
               fontWeight: FontWeight.bold,

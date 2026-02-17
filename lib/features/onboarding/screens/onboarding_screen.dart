@@ -18,20 +18,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   final List<OnboardingData> _pages = [
     OnboardingData(
-      title: 'Welcome to MosquePool',
-      description: 'Share the journey, multiply the reward. Join our community of travelers.',
+      title: 'Bienvenue sur LiftMosque',
+      description: 'Partagez le trajet, multipliez la récompense. Rejoignez notre communauté dès aujourd\'hui.',
       icon: Icons.mosque_outlined,
       color: AppTheme.primaryGreen,
     ),
     OnboardingData(
-      title: 'Find Your Ride',
-      description: 'Easily find trips to your local mosque or other destinations with fellow worshipers.',
+      title: 'Trouvez votre trajet',
+      description: 'Trouvez facilement des trajets vers votre mosquée locale avec d\'autres fidèles.',
       icon: Icons.directions_car_filled_outlined,
       color: AppTheme.secondaryBlue,
     ),
     OnboardingData(
-      title: 'Real-time Notifications',
-      description: 'Stay updated with trip reminders, message alerts, and more.',
+      title: 'Notifications en temps réel',
+      description: 'Restez informé avec des rappels de trajet, des alertes de message et plus encore.',
       icon: Icons.notifications_active_outlined,
       color: AppTheme.primaryGreen,
     ),
@@ -93,7 +93,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     }
                   },
                   child: Text(
-                    _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                    _currentPage == _pages.length - 1 ? 'Commencer' : 'Suivant',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),

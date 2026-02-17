@@ -1,6 +1,6 @@
-# MosquePool 🕋🚗
+# LiftMosque 🕋🚗
 
-**MosquePool** is a premium community carpooling application designed to facilitate travel to mosques for prayer. It connects drivers with available seats to passengers going to the same mosque, fostering community solidarity and eco-friendly transportation.
+**LiftMosque** is a premium community carpooling application designed to facilitate travel to mosques for prayer. It connects drivers with available seats to passengers going to the same mosque, fostering community solidarity and eco-friendly transportation.
 
 ## 🚀 Features
 

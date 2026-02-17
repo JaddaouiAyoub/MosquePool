@@ -81,7 +81,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         title: const Text(
-          'Modify Trip',
+          'Modifier le trajet',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
@@ -94,7 +94,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
             const SizedBox(height: 24),
             _buildTextField(
               controller: _departureController,
-              label: 'From (Departure Point)',
+              label: 'De (Point de départ)',
               icon: Icons.my_location,
               iconColor: AppTheme.secondaryBlue,
             ),
@@ -120,7 +120,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
               child: IgnorePointer(
                 child: _buildTextField(
                   controller: _mosqueController,
-                  label: 'To (Mosque)',
+                  label: 'Vers (Mosquée)',
                   icon: Icons.mosque,
                   iconColor: AppTheme.primaryGreen,
                 ),
@@ -129,7 +129,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
             const SizedBox(height: 16),
             _buildTextField(
               controller: _seatsController,
-              label: 'Available Seats',
+              label: 'Places disponibles',
               icon: Icons.event_seat,
               iconColor: Colors.orange,
               isNumber: true,
@@ -165,7 +165,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Trip Schedule',
+            'Horaire du trajet',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppTheme.secondaryBlue,
@@ -240,7 +240,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
           borderSide: BorderSide.none,
         ),
       ),
-      validator: (val) => val!.isEmpty ? 'Field required' : null,
+      validator: (val) => val!.isEmpty ? 'Champ requis' : null,
     );
   }
 
@@ -249,14 +249,14 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Text(
-          'Pickup Points',
+          'Points de passage',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         TextButton.icon(
           onPressed: () =>
               setState(() => _pickupControllers.add(TextEditingController())),
           icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Add stop'),
+          label: const Text('Ajouter un arrêt'),
         ),
       ],
     );
@@ -269,7 +269,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
         child: TextFormField(
           controller: entry.value,
           decoration: InputDecoration(
-            labelText: 'Stop ${entry.key + 1}',
+            labelText: 'Arrêt ${entry.key + 1}',
             prefixIcon: const Icon(Icons.push_pin_outlined, size: 20),
             suffixIcon: _pickupControllers.length > 1
                 ? IconButton(
@@ -334,7 +334,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
               );
             }
           } finally {
@@ -352,7 +352,7 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
               ),
             )
           : const Text(
-              'Save Changes',
+              'Enregistrer les modifications',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
     );

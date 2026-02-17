@@ -60,7 +60,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
         title: const Text(
-          'Offer a Ride',
+          'Proposer un trajet',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
@@ -78,7 +78,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
             TextFormField(
               controller: _departureController,
               decoration: InputDecoration(
-                labelText: 'From (Departure Point)',
+                labelText: 'De (Point de départ)',
                 prefixIcon: const Icon(
                   Icons.my_location,
                   color: AppTheme.secondaryBlue,
@@ -90,7 +90,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              validator: (val) => val!.isEmpty ? 'Field required' : null,
+              validator: (val) => val!.isEmpty ? 'Champ requis' : null,
             ),
             const SizedBox(height: 16),
             InkWell(
@@ -116,8 +116,8 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                 child: TextFormField(
                   controller: _mosqueController,
                   decoration: InputDecoration(
-                    labelText: 'To (Mosque)',
-                    hintText: 'Select a mosque...',
+                    labelText: 'Vers (Mosquée)',
+                    hintText: 'Sélectionner une mosquée...',
                     prefixIcon: const Icon(
                       Icons.mosque,
                       color: AppTheme.primaryGreen,
@@ -131,7 +131,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                     ),
                   ),
                   validator: (val) =>
-                      val!.isEmpty ? 'Please select a mosque' : null,
+                      val!.isEmpty ? 'Veuillez sélectionner une mosquée' : null,
                 ),
               ),
             ),
@@ -140,7 +140,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
               controller: _seatsController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Available Seats',
+                labelText: 'Places disponibles',
                 prefixIcon: const Icon(Icons.event_seat, color: Colors.orange),
                 filled: true,
                 fillColor: Colors.white,
@@ -149,7 +149,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              validator: (val) => val!.isEmpty ? 'Field required' : null,
+              validator: (val) => val!.isEmpty ? 'Champ requis' : null,
             ),
             const SizedBox(height: 32),
             _buildPickupSection(),
@@ -180,7 +180,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Trip Schedule',
+            'Horaire du trajet',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppTheme.secondaryBlue,
@@ -242,7 +242,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Pickup Points',
+              'Points de passage',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             TextButton.icon(
@@ -250,7 +250,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                 () => _pickupControllers.add(TextEditingController()),
               ),
               icon: const Icon(Icons.add_circle_outline),
-              label: const Text('Add stop'),
+              label: const Text('Ajouter un arrêt'),
             ),
           ],
         ),
@@ -261,7 +261,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
             child: TextFormField(
               controller: entry.value,
               decoration: InputDecoration(
-                labelText: 'Stop ${entry.key + 1}',
+                labelText: 'Arrêt ${entry.key + 1}',
                 prefixIcon: const Icon(Icons.push_pin_outlined, size: 20),
                 suffixIcon: _pickupControllers.length > 1
                     ? IconButton(
@@ -304,7 +304,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           try {
             final user = ref.read(profileProvider);
             if (user.id.isEmpty) {
-              throw Exception("User profile not loaded. Please wait a moment.");
+              throw Exception("Profil utilisateur non chargé. Veuillez patienter.");
             }
             
             final departureDateTime = DateTime(
@@ -339,7 +339,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
               );
             }
           } finally {
@@ -354,7 +354,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
             )
           : const Text(
-              'Publish Trip',
+              'Publier le trajet',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
     );

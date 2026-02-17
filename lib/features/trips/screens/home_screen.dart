@@ -32,7 +32,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 10),
                   const Text(
-                    'MosquePool',
+                    'LiftMosque',
                     style: TextStyle(
                       color: AppTheme.secondaryBlue,
                       fontWeight: FontWeight.bold,
@@ -82,7 +82,7 @@ class HomeScreen extends ConsumerWidget {
               child: TextField(
                 onChanged: (value) => ref.read(searchQueryProvider.notifier).state = value,
                 decoration: InputDecoration(
-                  hintText: 'Search mosque or departure point...',
+                  hintText: 'Rechercher une mosquée ou un point de départ...',
                   prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGreen),
                   filled: true,
                   fillColor: Colors.white,
@@ -111,7 +111,7 @@ class HomeScreen extends ConsumerWidget {
                     Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
                     const SizedBox(height: 16),
                     Text(
-                      'No trips found',
+                      'Aucun trajet trouvé',
                       style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
                     ),
                   ],
@@ -135,7 +135,7 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/add-trip'),
-        label: const Text('Offer a Ride'),
+        label: const Text('Proposer un trajet'),
         icon: const Icon(Icons.add),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,

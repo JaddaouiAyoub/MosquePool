@@ -12,6 +12,7 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/providers/onboarding_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/screens/verify_email_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/trips/providers/trips_provider.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
@@ -48,15 +49,24 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
 
       // 3. Check Auth State
       final isLoggedIn = authState.value != null;
-      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+      final isLoggingIn =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup';
 
       if (!isLoggedIn) {
         if (isLoggingIn || state.matchedLocation == '/onboarding') return null;
         return '/login';
       }
 
-      // 4. Redirect from auth screens to home if already logged in
-      if (isLoggedIn && isLoggingIn) {
+      // 4. Check Email Verification
+      final user = authState.value;
+      if (isLoggedIn && !user!.emailVerified) {
+        if (state.matchedLocation == '/verify-email') return null;
+        return '/verify-email';
+      }
+
+      // 5. Redirect from auth screens to home if already logged in and verified
+      if (isLoggedIn && user!.emailVerified && isLoggingIn) {
         return '/';
       }
 
@@ -67,13 +77,14 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => const VerifyEmailScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -83,7 +94,10 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             navigatorKey: _shellNavigatorHomeKey,
             routes: [
-              GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const HomeScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(

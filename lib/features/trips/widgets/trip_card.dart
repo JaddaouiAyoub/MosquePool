@@ -180,8 +180,8 @@ class TripCard extends ConsumerWidget {
                           ),
                           child: Text(
                             trip.seatsAvailable == 0
-                                ? 'Full'
-                                : '${trip.seatsAvailable} seats left',
+                                ? 'Complet'
+                                : '${trip.seatsAvailable} places restantes',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -226,8 +226,8 @@ class TripCard extends ConsumerWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(isBlocked
-                                      ? "You have reached the limit of changes for this trip."
-                                      : "This trip is full."),
+                                      ? "Vous avez atteint la limite de modifications pour ce trajet."
+                                      : "Ce trajet est complet."),
                                   backgroundColor: Colors.orange,
                                 ),
                               );
