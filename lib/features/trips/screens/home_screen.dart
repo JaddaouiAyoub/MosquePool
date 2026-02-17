@@ -22,12 +22,23 @@ class HomeScreen extends ConsumerWidget {
             floating: true,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'MosquePool',
-                style: TextStyle(
-                  color: AppTheme.secondaryBlue,
-                  fontWeight: FontWeight.bold,
-                ),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/logo/logo1.png',
+                    height: 40,
+                    width: 40,
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'MosquePool',
+                    style: TextStyle(
+                      color: AppTheme.secondaryBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
               background: Container(
                 color: Theme.of(context).scaffoldBackgroundColor,
