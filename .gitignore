@@ -47,3 +47,4 @@ app.*.map.json
 .flutter-plugins*
 
 /msq_admin
+/mon_app_keystore.jks
