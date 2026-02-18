@@ -52,7 +52,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Un lien de vérification a été envoyé à votre adresse e-mail. Veuillez cliquer sur le lien pour activer votre compte.',
+                'Un lien de vérification a été envoyé à votre adresse e-mail. Veuillez cliquer sur le lien pour activer votre compte. (si le lien n\'est pas reçu, vérifiez votre dossier de spam)',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
