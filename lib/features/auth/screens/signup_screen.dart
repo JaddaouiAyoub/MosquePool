@@ -110,7 +110,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       child: _buildTextField(
                         controller: _firstNameController,
                         label: 'Prénom',
-                        hint: 'Ayoub',
+                        hint: 'Prénom',
                         prefixIcon: Icons.person_outline,
                         validator: (v) => v?.isEmpty ?? true ? 'Requis' : null,
                       ),
@@ -120,7 +120,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       child: _buildTextField(
                         controller: _lastNameController,
                         label: 'Nom',
-                        hint: 'Jaddaoui',
+                        hint: 'Nom',
                         prefixIcon: Icons.person_outline,
                         validator: (v) => v?.isEmpty ?? true ? 'Requis' : null,
                       ),
