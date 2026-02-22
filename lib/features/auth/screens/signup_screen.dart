@@ -23,6 +23,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _privacyAccepted = false;
+  bool _termsAccepted = false;
 
   @override
   void dispose() {
@@ -170,9 +172,29 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ).animate().fadeIn(delay: 700.ms).moveY(begin: 10, end: 0),
+                const SizedBox(height: 24),
+                _buildCheckboxRow(
+                  value: _privacyAccepted,
+                  onChanged: (v) =>
+                      setState(() => _privacyAccepted = v ?? false),
+                  label: "J'accepte la ",
+                  linkText: "politique de confidentialité",
+                  onLinkTap: () => context.push('/privacy-policy'),
+                ),
+                const SizedBox(height: 8),
+                _buildCheckboxRow(
+                  value: _termsAccepted,
+                  onChanged: (v) => setState(() => _termsAccepted = v ?? false),
+                  label: "J'accepte les ",
+                  linkText: "conditions d'utilisation",
+                  onLinkTap: () => context.push('/terms-of-use'),
+                ),
                 const SizedBox(height: 40),
                 ElevatedButton(
-                      onPressed: isLoading ? null : _handleSignup,
+                      onPressed:
+                          (isLoading || !_privacyAccepted || !_termsAccepted)
+                          ? null
+                          : _handleSignup,
                       child: isLoading
                           ? const SizedBox(
                               height: 20,
@@ -270,6 +292,58 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCheckboxRow({
+    required bool value,
+    required ValueChanged<bool?> onChanged,
+    required String label,
+    required String linkText,
+    required VoidCallback onLinkTap,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          height: 24,
+          width: 24,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppTheme.primaryGreen,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => onChanged(!value),
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                children: [
+                  TextSpan(text: label),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: GestureDetector(
+                      onTap: onLinkTap,
+                      child: Text(
+                        linkText,
+                        style: const TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

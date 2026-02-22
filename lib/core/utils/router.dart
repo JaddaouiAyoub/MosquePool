@@ -13,6 +13,8 @@ import '../../features/onboarding/providers/onboarding_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
 import '../../features/auth/screens/verify_email_screen.dart';
+import '../../features/auth/screens/privacy_policy_screen.dart';
+import '../../features/auth/screens/terms_of_use_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/trips/providers/trips_provider.dart';
 import '../../shared/widgets/main_navigation_wrapper.dart';
@@ -51,7 +53,9 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.value != null;
       final isLoggingIn =
           state.matchedLocation == '/login' ||
-          state.matchedLocation == '/signup';
+          state.matchedLocation == '/signup' ||
+          state.matchedLocation == '/privacy-policy' ||
+          state.matchedLocation == '/terms-of-use';
 
       if (!isLoggedIn) {
         if (isLoggingIn || state.matchedLocation == '/onboarding') return null;
@@ -85,6 +89,14 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/verify-email',
         builder: (context, state) => const VerifyEmailScreen(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
+      ),
+      GoRoute(
+        path: '/terms-of-use',
+        builder: (context, state) => const TermsOfUseScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
