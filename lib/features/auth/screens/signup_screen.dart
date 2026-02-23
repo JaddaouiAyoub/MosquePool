@@ -48,7 +48,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             password: _passwordController.text,
             firstName: _firstNameController.text.trim(),
             lastName: _lastNameController.text.trim(),
-            phone: _phoneController.text.trim(),
+            phone: _phoneController.text.replaceAll(RegExp(r'\s+'), '').trim(),
           );
       // Removed context.go('/') as GoRouter handles redirection to /verify-email
     } catch (e) {

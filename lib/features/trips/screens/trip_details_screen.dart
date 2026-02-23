@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/trip.dart';
 import '../providers/trips_provider.dart';
 import 'trip_map_screen.dart';
@@ -69,6 +70,33 @@ class TripDetailsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _handleCallDriver(BuildContext context) async {
+    final phone = trip.driverPhone;
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Le numéro de téléphone n'est pas disponible."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final url = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Impossible de lancer l'appel."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -452,7 +480,7 @@ class TripDetailsScreen extends ConsumerWidget {
               Icons.phone_in_talk,
               color: AppTheme.secondaryBlue,
             ),
-            onPressed: () {},
+            onPressed: () => _handleCallDriver(context),
           ),
         ),
       ],

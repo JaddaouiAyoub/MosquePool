@@ -7,6 +7,7 @@ class Trip {
   final String? mosqueId;
   final String driverId;
   final String driverName;
+  final String driverPhone;
   final String departurePoint;
   final String mosqueName;
   final String mosqueAddress;
@@ -25,6 +26,7 @@ class Trip {
     this.mosqueId,
     required this.driverId,
     required this.driverName,
+    required this.driverPhone,
     required this.departurePoint,
     required this.mosqueName,
     this.mosqueAddress = '',
@@ -59,12 +61,14 @@ class Trip {
     DateTime? createdAt,
     List<String>? pickupPoints,
     Map<String, int>? interactionCounts,
+    String? driverPhone,
   }) {
     return Trip(
       id: id,
       mosqueId: mosqueId ?? this.mosqueId,
       driverId: driverId,
       driverName: driverName,
+      driverPhone: driverPhone ?? this.driverPhone,
       departurePoint: departurePoint ?? this.departurePoint,
       mosqueName: mosqueName ?? this.mosqueName,
       mosqueAddress: mosqueAddress ?? this.mosqueAddress,
@@ -85,6 +89,7 @@ class Trip {
       'mosqueId': mosqueId,
       'driverId': driverId,
       'driverName': driverName,
+      'driverPhone': driverPhone,
       'departurePoint': departurePoint,
       'mosqueName': mosqueName,
       'mosqueAddress': mosqueAddress,
@@ -96,13 +101,17 @@ class Trip {
       'pickupPoints': pickupPoints,
       'status': status.name,
       'interactionCounts': interactionCounts,
-      'interestedUsers': interestedUsers.map((u) => {
-        'id': u.id,
-        'firstName': u.firstName,
-        'lastName': u.lastName,
-        'email': u.email,
-        'phone': u.phone,
-      }).toList(),
+      'interestedUsers': interestedUsers
+          .map(
+            (u) => {
+              'id': u.id,
+              'firstName': u.firstName,
+              'lastName': u.lastName,
+              'email': u.email,
+              'phone': u.phone,
+            },
+          )
+          .toList(),
     };
   }
 
@@ -112,14 +121,15 @@ class Trip {
       mosqueId: map['mosqueId'],
       driverId: map['driverId'] ?? '',
       driverName: map['driverName'] ?? '',
+      driverPhone: map['driverPhone'] ?? '',
       departurePoint: map['departurePoint'] ?? '',
       mosqueName: map['mosqueName'] ?? '',
       mosqueAddress: map['mosqueAddress'] ?? '',
       mosqueLat: (map['mosqueLat'] as num?)?.toDouble(),
       mosqueLng: (map['mosqueLng'] as num?)?.toDouble(),
       departureTime: DateTime.parse(map['departureTime']),
-      createdAt: map['createdAt'] != null 
-          ? DateTime.parse(map['createdAt']) 
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
       seatsAvailable: map['seatsAvailable'] ?? 0,
       pickupPoints: List<String>.from(map['pickupPoints'] ?? []),
@@ -129,13 +139,15 @@ class Trip {
       ),
       interactionCounts: Map<String, int>.from(map['interactionCounts'] ?? {}),
       interestedUsers: (map['interestedUsers'] as List? ?? [])
-          .map((u) => UserModel(
-                id: u['id'],
-                firstName: u['firstName'] ?? '',
-                lastName: u['lastName'] ?? '',
-                email: u['email'] ?? '',
-                phone: u['phone'] ?? '',
-              ))
+          .map(
+            (u) => UserModel(
+              id: u['id'],
+              firstName: u['firstName'] ?? '',
+              lastName: u['lastName'] ?? '',
+              email: u['email'] ?? '',
+              phone: u['phone'] ?? '',
+            ),
+          )
           .toList(),
     );
   }

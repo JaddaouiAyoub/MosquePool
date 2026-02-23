@@ -315,7 +315,9 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
               _selectedTime.minute,
             );
 
+            final user = ref.read(profileProvider);
             final updatedTrip = widget.trip.copyWith(
+              driverPhone: user.phone,
               departurePoint: _departureController.text,
               mosqueName: _mosqueController.text,
               mosqueAddress: _selectedMosqueAddress ?? '',
@@ -334,7 +336,10 @@ class _EditTripScreenState extends ConsumerState<EditTripScreen> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text('Erreur : $e'),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           } finally {

@@ -304,9 +304,11 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           try {
             final user = ref.read(profileProvider);
             if (user.id.isEmpty) {
-              throw Exception("Profil utilisateur non chargé. Veuillez patienter.");
+              throw Exception(
+                "Profil utilisateur non chargé. Veuillez patienter.",
+              );
             }
-            
+
             final departureDateTime = DateTime(
               _selectedDate.year,
               _selectedDate.month,
@@ -320,6 +322,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
               mosqueId: _selectedMosqueId,
               driverId: user.id,
               driverName: user.fullName,
+              driverPhone: user.phone,
               departurePoint: _departureController.text,
               mosqueName: _mosqueController.text,
               mosqueAddress: _selectedMosqueAddress ?? '',
@@ -339,7 +342,10 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text('Erreur : $e'),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           } finally {
@@ -351,7 +357,10 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
           ? const SizedBox(
               height: 20,
               width: 20,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
             )
           : const Text(
               'Publier le trajet',
