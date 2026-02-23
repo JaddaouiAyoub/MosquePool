@@ -43,6 +43,7 @@ class TripDetailsScreen extends ConsumerWidget {
                     .reportUser(
                       reportedUserId: trip.driverId,
                       tripId: trip.id,
+                      mosqueId: trip.mosqueId ?? '',
                       reason: controller.text.trim(),
                     );
                 if (context.mounted) {

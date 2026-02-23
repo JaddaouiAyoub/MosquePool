@@ -235,6 +235,7 @@ class TripsNotifier extends Notifier<List<Trip>> {
   Future<void> reportUser({
     required String reportedUserId,
     required String tripId,
+    required String mosqueId,
     required String reason,
   }) async {
     final currentUser = ref.read(profileProvider);
@@ -244,6 +245,7 @@ class TripsNotifier extends Notifier<List<Trip>> {
       reporterId: currentUser.id,
       reportedUserId: reportedUserId,
       tripId: tripId,
+      mosqueId: mosqueId,
       reason: reason,
     );
   }

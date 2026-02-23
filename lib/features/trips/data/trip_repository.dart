@@ -70,12 +70,14 @@ class TripRepository {
     required String reporterId,
     required String reportedUserId,
     required String tripId,
+    required String mosqueId,
     required String reason,
   }) async {
     await _firestore.collection('reports').add({
       'reporterId': reporterId,
       'reportedUserId': reportedUserId,
       'tripId': tripId,
+      'mosqueId': mosqueId,
       'reason': reason,
       'createdAt': FieldValue.serverTimestamp(),
       'status': 'pending',
