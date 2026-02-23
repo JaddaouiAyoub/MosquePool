@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/trips_provider.dart';
 import '../widgets/trip_card.dart';
 import '../models/trip.dart';
@@ -164,7 +165,9 @@ class MyTripsScreen extends ConsumerWidget {
                       size: 18,
                       color: AppTheme.secondaryBlue,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      _handleCallParticipant(context, participant.phone);
+                    },
                   ),
                 ],
               ),
@@ -209,5 +212,16 @@ class MyTripsScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _handleCallParticipant(BuildContext context, String phone) async {
+    final Uri url = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impossible de lancer l\'appel: $phone')),
+      );
+    }
   }
 }
