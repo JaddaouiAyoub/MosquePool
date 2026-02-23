@@ -59,12 +59,15 @@ class NotificationsScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final n = notifications[index];
                 final isJoin = n.title.contains('interested!');
+                final isAlert = n.title.contains('Avertissement');
 
                 return Dismissible(
                   key: Key(n.id),
                   direction: DismissDirection.endToStart,
                   onDismissed: (_) {
-                    ref.read(notificationsProvider.notifier).deleteNotification(n.id);
+                    ref
+                        .read(notificationsProvider.notifier)
+                        .deleteNotification(n.id);
                   },
                   background: Container(
                     alignment: Alignment.centerRight,
@@ -79,11 +82,15 @@ class NotificationsScreen extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: n.isRead
                           ? Colors.white
+                          : isAlert
+                          ? Colors.orange.withOpacity(0.05)
                           : AppTheme.primaryGreen.withOpacity(0.04),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: n.isRead
                             ? Colors.grey.shade100
+                            : isAlert
+                            ? Colors.orange.withOpacity(0.2)
                             : AppTheme.primaryGreen.withOpacity(0.15),
                       ),
                     ),
@@ -96,16 +103,22 @@ class NotificationsScreen extends ConsumerWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: isJoin
+                          color: isAlert
+                              ? Colors.orange.withOpacity(0.1)
+                              : isJoin
                               ? AppTheme.primaryGreen.withOpacity(0.1)
                               : Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
-                          isJoin
+                          isAlert
+                              ? Icons.warning_amber_rounded
+                              : isJoin
                               ? Icons.person_add_alt_1
                               : Icons.person_remove_alt_1,
-                          color: isJoin
+                          color: isAlert
+                              ? Colors.orange.shade800
+                              : isJoin
                               ? AppTheme.primaryGreen
                               : Colors.orange.shade700,
                           size: 22,
@@ -127,7 +140,9 @@ class NotificationsScreen extends ConsumerWidget {
                           Text(
                             n.body,
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: isAlert
+                                  ? Colors.orange.shade800
+                                  : Colors.grey.shade600,
                               fontSize: 12,
                             ),
                           ),
@@ -135,7 +150,9 @@ class NotificationsScreen extends ConsumerWidget {
                           Text(
                             _formatTime(n.createdAt),
                             style: TextStyle(
-                              color: Colors.grey.shade400,
+                              color: isAlert
+                                  ? Colors.orange.withOpacity(0.5)
+                                  : Colors.grey.shade400,
                               fontSize: 11,
                             ),
                           ),
@@ -145,14 +162,18 @@ class NotificationsScreen extends ConsumerWidget {
                           ? Container(
                               width: 10,
                               height: 10,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.primaryGreen,
+                              decoration: BoxDecoration(
+                                color: isAlert
+                                    ? Colors.orange
+                                    : AppTheme.primaryGreen,
                                 shape: BoxShape.circle,
                               ),
                             )
                           : null,
                       onTap: () {
-                        ref.read(notificationsProvider.notifier).markAsRead(n.id);
+                        ref
+                            .read(notificationsProvider.notifier)
+                            .markAsRead(n.id);
                       },
                     ),
                   ),

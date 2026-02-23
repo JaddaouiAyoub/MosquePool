@@ -4,18 +4,25 @@ import '../models/notification_model.dart';
 import '../data/notification_repository.dart';
 import '../../trips/providers/trips_provider.dart';
 
-final notificationRepositoryProvider = Provider<NotificationRepository>((ref) => NotificationRepository());
+final notificationRepositoryProvider = Provider<NotificationRepository>(
+  (ref) => NotificationRepository(),
+);
 
 class NotificationsNotifier extends Notifier<List<AppNotification>> {
-  NotificationRepository get _repository => ref.read(notificationRepositoryProvider);
+  NotificationRepository get _repository =>
+      ref.read(notificationRepositoryProvider);
   StreamSubscription? _subscription;
+  StreamSubscription? _alertSubscription;
+  List<AppNotification> _currentNotifications = [];
+  List<AppNotification> _currentAlerts = [];
 
   @override
   List<AppNotification> build() {
     final user = ref.watch(profileProvider);
-    
+
     ref.onDispose(() {
       _subscription?.cancel();
+      _alertSubscription?.cancel();
     });
 
     if (user.id.isNotEmpty) {
@@ -26,12 +33,31 @@ class NotificationsNotifier extends Notifier<List<AppNotification>> {
 
   void _listenToNotifications(String userId) {
     _subscription?.cancel();
-    _subscription = _repository.getNotifications(userId).listen((notifications) {
-      state = notifications;
+    _alertSubscription?.cancel();
+
+    _subscription = _repository.getNotifications(userId).listen((
+      notifications,
+    ) {
+      _currentNotifications = notifications;
+      _updateCombinedState();
+    });
+
+    _alertSubscription = _repository.getSecurityAlerts(userId).listen((alerts) {
+      _currentAlerts = alerts;
+      _updateCombinedState();
     });
   }
 
-  Future<void> addNotification(String targetUserId, AppNotification notification) async {
+  void _updateCombinedState() {
+    final combined = [..._currentNotifications, ..._currentAlerts];
+    combined.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = combined;
+  }
+
+  Future<void> addNotification(
+    String targetUserId,
+    AppNotification notification,
+  ) async {
     await _repository.addNotification(targetUserId, notification);
   }
 
