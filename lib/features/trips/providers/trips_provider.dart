@@ -81,6 +81,19 @@ class ProfileNotifier extends Notifier<UserModel> {
     await ref.read(authRepositoryProvider).resendVerificationEmail();
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    await ref.read(authRepositoryProvider).sendPasswordResetEmail(email);
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    await ref.read(authRepositoryProvider).updatePassword(newPassword);
+  }
+
+  Future<void> deleteAccount() async {
+    await ref.read(authRepositoryProvider).deleteAccount();
+    state = _emptyUser;
+  }
+
   Future<void> refreshAuthStatus() async {
     await ref.read(authRepositoryProvider).reloadUser();
     // Invalidate authStateProvider so that listeners like GoRouter
@@ -93,12 +106,16 @@ class ProfileNotifier extends Notifier<UserModel> {
     String? lastName,
     String? email,
     String? phone,
+    String? role,
+    String? mosqueId,
   }) {
     state = state.copyWith(
       firstName: firstName,
       lastName: lastName,
       email: email,
       phone: phone,
+      role: role,
+      mosqueId: mosqueId,
     );
   }
 }
@@ -202,10 +219,33 @@ class TripsNotifier extends Notifier<List<Trip>> {
   Future<void> updateTrip(Trip trip) async {
     // If ID is numeric (mock time-based), it's a new trip in our UI logic
     if (trip.id.length > 10 && int.tryParse(trip.id) != null) {
+      // Check trip limit: Max 2 per day
+      final count = await _repository.getUserTripsTodayCount(trip.driverId);
+      if (count >= 2) {
+        throw Exception(
+          "Vous avez atteint la limite de 2 covoiturages par jour.",
+        );
+      }
       await _repository.createTrip(trip);
     } else {
       await _repository.updateTrip(trip);
     }
+  }
+
+  Future<void> reportUser({
+    required String reportedUserId,
+    required String tripId,
+    required String reason,
+  }) async {
+    final currentUser = ref.read(profileProvider);
+    if (currentUser.id.isEmpty) return;
+
+    await _repository.reportUser(
+      reporterId: currentUser.id,
+      reportedUserId: reportedUserId,
+      tripId: tripId,
+      reason: reason,
+    );
   }
 }
 

@@ -11,16 +11,16 @@ class TripRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => Trip.fromMap(doc.id, doc.data()))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => Trip.fromMap(doc.id, doc.data()))
+              .toList();
+        });
   }
 
   Future<void> createTrip(Trip trip) async {
-    // When creating, we use the timestamp from the trip object 
+    // When creating, we use the timestamp from the trip object
     // but we could also use FieldValue.serverTimestamp() if we wanted.
-    // However, since Trip.fromMap expects a string/DateTime, 
+    // However, since Trip.fromMap expects a string/DateTime,
     // using the trip's createdAt is fine.
     await _firestore.collection('trips').add(trip.toMap());
   }
@@ -50,6 +50,35 @@ class TripRepository {
       'interestedUsers': FieldValue.arrayRemove([userData]),
       'seatsAvailable': FieldValue.increment(1),
       'interactionCounts.$userId': FieldValue.increment(1),
+    });
+  }
+
+  Future<int> getUserTripsTodayCount(String userId) async {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+
+    final query = await _firestore
+        .collection('trips')
+        .where('driverId', isEqualTo: userId)
+        .where('createdAt', isGreaterThanOrEqualTo: startOfDay)
+        .get();
+
+    return query.docs.length;
+  }
+
+  Future<void> reportUser({
+    required String reporterId,
+    required String reportedUserId,
+    required String tripId,
+    required String reason,
+  }) async {
+    await _firestore.collection('reports').add({
+      'reporterId': reporterId,
+      'reportedUserId': reportedUserId,
+      'tripId': tripId,
+      'reason': reason,
+      'createdAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
     });
   }
 }

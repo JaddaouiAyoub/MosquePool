@@ -14,6 +14,63 @@ class TripDetailsScreen extends ConsumerWidget {
 
   const TripDetailsScreen({super.key, required this.trip});
 
+  void _showReportDialog(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Signaler l’utilisateur'),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Raison du signalement...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (controller.text.trim().isEmpty) return;
+              try {
+                await ref
+                    .read(tripsProvider.notifier)
+                    .reportUser(
+                      reportedUserId: trip.driverId,
+                      tripId: trip.id,
+                      reason: controller.text.trim(),
+                    );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Signalement envoyé. Merci.'),
+                      backgroundColor: AppTheme.primaryGreen,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Signaler'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(profileProvider);
@@ -68,7 +125,10 @@ class TripDetailsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -93,7 +153,7 @@ class TripDetailsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDriverProfile(context, isOwner),
+                  _buildDriverProfile(context, ref, isOwner),
                   const SizedBox(height: 40),
                   Text(
                     "Itinéraire détaillé",
@@ -135,7 +195,11 @@ class TripDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDriverProfile(BuildContext context, bool isOwner) {
+  Widget _buildDriverProfile(
+    BuildContext context,
+    WidgetRef ref,
+    bool isOwner,
+  ) {
     return Row(
       children: [
         Container(
@@ -174,6 +238,15 @@ class TripDetailsScreen extends ConsumerWidget {
             ),
           ],
         ),
+        const Spacer(),
+        if (!isOwner)
+          IconButton(
+            icon: const Icon(
+              Icons.report_problem_outlined,
+              color: Colors.orange,
+            ),
+            onPressed: () => _showReportDialog(context, ref),
+          ),
       ],
     );
   }
@@ -329,9 +402,11 @@ class TripDetailsScreen extends ConsumerWidget {
               if (isBlocked || (isFull && !isInterested)) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(isBlocked
-                        ? "Vous avez atteint la limite de modifications pour ce trajet."
-                        : "Ce trajet est complet."),
+                    content: Text(
+                      isBlocked
+                          ? "Vous avez atteint la limite de modifications pour ce trajet."
+                          : "Ce trajet est complet.",
+                    ),
                     backgroundColor: Colors.orange,
                   ),
                 );
@@ -356,7 +431,11 @@ class TripDetailsScreen extends ConsumerWidget {
             child: Text(
               !currentTrip.canToggle(user.id)
                   ? "Interaction limitée 🚫"
-                  : (isInterested ? "Rejoint ✅" : (currentTrip.isFull ? "Complet 🛑" : "Rejoindre ce trajet")),
+                  : (isInterested
+                        ? "Rejoint ✅"
+                        : (currentTrip.isFull
+                              ? "Complet 🛑"
+                              : "Rejoindre ce trajet")),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
