@@ -254,9 +254,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildProfileItem(Icons.history, 'Historique des trajets', () {}),
-          _buildProfileItem(Icons.settings_outlined, 'Paramètres', () {}),
-          _buildProfileItem(Icons.help_outline, 'Aide et support', () {}),
+          // _buildProfileItem(Icons.history, 'Historique des trajets', () {}),
+          // _buildProfileItem(Icons.settings_outlined, 'Paramètres', () {}),
+          // _buildProfileItem(Icons.help_outline, 'Aide et support', () {}),
           _buildProfileItem(
             Icons.info_outline,
             'À propos',
@@ -316,10 +316,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            user.fullName,
+            "${user.firstName} ${user.lastName}",
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          Text(user.phone, style: TextStyle(color: Colors.grey.shade600)),
+          Text(
+            user.phone,
+            style: TextStyle(color: const Color.fromARGB(255, 7, 7, 7)),
+          ),
         ],
       ),
     );
