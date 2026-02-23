@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../trips/providers/trips_provider.dart';
 import '../auth/providers/auth_provider.dart';
 import '../auth/models/user_model.dart';
@@ -59,6 +60,89 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     await ref.read(profileProvider.notifier).signOut();
   }
 
+  Future<void> _handleChangePassword() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Changer le mot de passe'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Nouveau mot de passe',
+            hintText: 'Min 6 caractères',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Valider'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.length >= 6) {
+      try {
+        await ref.read(profileProvider.notifier).updatePassword(result);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Mot de passe mis à jour !'),
+              backgroundColor: AppTheme.primaryGreen,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer le compte ?'),
+        content: const Text(
+          'Cette action est irréversible. Toutes vos données seront effacées de Firebase.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ref.read(profileProvider.notifier).deleteAccount();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -70,54 +154,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Icon(Icons.info_outline, color: AppTheme.primaryGreen),
             SizedBox(width: 12),
             Expanded(
-              // ← Important pour éviter l'overflow
               child: Text(
                 'À propos de\n LiftMosque',
-                overflow: TextOverflow
-                    .ellipsis, // ou softWrap: true si tu veux plusieurs lignes
                 textAlign: TextAlign.center,
               ),
             ),
           ],
         ),
-
         content: SingleChildScrollView(
-          // ← Ici
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Objectif',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.secondaryBlue,
-                ),
+                'LiftMosque est une application communautaire permettant aux fidèles d’organiser le covoiturage vers les mosquées et les activités associées.',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               const Text(
-                'LiftMosque est une application communautaire conçue pour faciliter le transport vers les mosquées. '
-                'Notre mission est de renforcer les liens au sein de la communauté tout en encourageant une mobilité durable et solidaire.',
+                'Contact :',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+              const Text('Email support : support@liftmosque.ca'),
               const Divider(height: 32),
-              Center(
-                child: Column(
-                  children: [
-                    const Text(
-                      'Développé avec ❤️ au Maroc',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Text(
-                      'par Ayoub Jaddaoui',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryGreen,
-                      ),
-                    ),
-                  ],
-                ),
+              const Text(
+                'LiftMosque est une plateforme de mise en relation entre utilisateurs. LiftMosque n’est pas une entreprise de transport.',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Liens :',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.push('/privacy-policy');
+                },
+                child: const Text('Politique de confidentialité'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  context.push('/terms-of-use');
+                },
+                child: const Text("Conditions d'utilisation"),
               ),
             ],
           ),
@@ -182,6 +261,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Icons.info_outline,
             'À propos',
             () => _showAboutDialog(context),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            "Sécurité",
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildProfileItem(
+            Icons.lock_reset,
+            'Changer mot de passe',
+            _handleChangePassword,
+          ),
+          _buildProfileItem(
+            Icons.delete_forever,
+            'Supprimer mon compte',
+            _handleDeleteAccount,
+            color: Colors.red.shade400,
           ),
           const Divider(height: 48),
           _buildProfileItem(

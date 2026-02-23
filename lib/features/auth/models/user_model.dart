@@ -4,6 +4,8 @@ class UserModel {
   final String lastName;
   final String email;
   final String phone;
+  final String role; // 'user', 'mosque_admin', 'global_admin'
+  final String? mosqueId;
 
   UserModel({
     required this.id,
@@ -11,6 +13,8 @@ class UserModel {
     required this.lastName,
     required this.email,
     required this.phone,
+    this.role = 'user',
+    this.mosqueId,
   });
 
   String get fullName => '$firstName $lastName';
@@ -20,6 +24,8 @@ class UserModel {
     String? lastName,
     String? email,
     String? phone,
+    String? role,
+    String? mosqueId,
   }) {
     return UserModel(
       id: id,
@@ -27,6 +33,8 @@ class UserModel {
       lastName: lastName ?? this.lastName,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      role: role ?? this.role,
+      mosqueId: mosqueId ?? this.mosqueId,
     );
   }
 
@@ -37,6 +45,8 @@ class UserModel {
       'lastName': lastName,
       'email': email,
       'phone': phone,
+      'role': role,
+      'mosqueId': mosqueId,
     };
   }
 
@@ -47,6 +57,8 @@ class UserModel {
       lastName: map['lastName'] ?? '',
       email: map['email'] ?? '',
       phone: map['phone'] ?? '',
+      role: map['role'] ?? 'user',
+      mosqueId: map['mosqueId'],
     );
   }
 }

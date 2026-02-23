@@ -33,22 +33,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(profileProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+      await ref
+          .read(profileProvider.notifier)
+          .login(_emailController.text.trim(), _passwordController.text);
       if (mounted) context.go('/');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez entrer une adresse e-mail valide.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await ref.read(profileProvider.notifier).sendPasswordResetEmail(email);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('E-mail envoyé'),
+            content: Text(
+              'Un e-mail de réinitialisation a été envoyé à $email. Veuillez vérifier votre boîte de réception.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -68,17 +104,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: 80),
                 Center(
-                  child: const AppLogo(size: 80)
-                      .animate()
-                      .scale(duration: 500.ms, curve: Curves.easeOutBack),
+                  child: const AppLogo(size: 80).animate().scale(
+                    duration: 500.ms,
+                    curve: Curves.easeOutBack,
+                  ),
                 ),
                 const SizedBox(height: 48),
                 Text(
                   'Bon retour',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryGreen,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryGreen,
+                  ),
                 ).animate().fadeIn(delay: 200.ms).moveX(begin: -20, end: 0),
                 const SizedBox(height: 8),
                 Text(
@@ -92,8 +129,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   hint: 'nom@exemple.com',
                   prefixIcon: Icons.email_outlined,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Veuillez entrer votre e-mail';
-                    if (!value.contains('@')) return 'Veuillez entrer un e-mail valide';
+                    if (value == null || value.isEmpty)
+                      return 'Veuillez entrer votre e-mail';
+                    if (!value.contains('@'))
+                      return 'Veuillez entrer un e-mail valide';
                     return null;
                   },
                 ).animate().fadeIn(delay: 400.ms).moveY(begin: 10, end: 0),
@@ -105,37 +144,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Veuillez entrer votre mot de passe';
-                    if (value.length < 6) return 'Le mot de passe doit faire au moins 6 caractères';
+                    if (value == null || value.isEmpty)
+                      return 'Veuillez entrer votre mot de passe';
+                    if (value.length < 6)
+                      return 'Le mot de passe doit faire au moins 6 caractères';
                     return null;
                   },
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Colors.grey,
                     ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ).animate().fadeIn(delay: 500.ms).moveY(begin: 10, end: 0),
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _handleForgotPassword,
                     child: const Text('Mot de passe oublié ?'),
                   ),
                 ).animate().fadeIn(delay: 600.ms),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: isLoading ? null : _handleLogin,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('Se connecter'),
-                ).animate().fadeIn(delay: 700.ms).scale(begin: const Offset(0.9, 0.9)),
+                      onPressed: isLoading ? null : _handleLogin,
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('Se connecter'),
+                    )
+                    .animate()
+                    .fadeIn(delay: 700.ms)
+                    .scale(begin: const Offset(0.9, 0.9)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -198,7 +248,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppTheme.primaryGreen, width: 2),
+              borderSide: const BorderSide(
+                color: AppTheme.primaryGreen,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),

@@ -81,6 +81,8 @@ class AuthRepository {
           lastName: data['lastName'] ?? '',
           email: data['email'] ?? '',
           phone: data['phone'] ?? '',
+          role: data['role'] ?? 'user',
+          mosqueId: data['mosqueId'],
         );
       } else {
         // Fallback for users who exist in Auth but not in Firestore
@@ -92,6 +94,7 @@ class AuthRepository {
             lastName: fbUser.displayName?.split(' ').last ?? '',
             email: fbUser.email ?? '',
             phone: '',
+            role: 'user',
           );
         }
       }
@@ -99,6 +102,46 @@ class AuthRepository {
       print('Error fetching user data: $e');
     }
     return null;
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Failed to send password reset email.';
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _auth.currentUser?.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Failed to update password.';
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        // 1. Delete Firestore data
+        await _firestore.collection('users').doc(uid).delete();
+
+        // 2. Delete Auth user
+        await _auth.currentUser?.delete();
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw 'Cette action nécessite une connexion récente. Veuillez vous reconnecter.';
+      }
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Failed to delete account.';
+    }
   }
 
   Future<void> signOut() async {
