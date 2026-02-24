@@ -10,7 +10,8 @@ class MosqueSelectorSheet extends ConsumerStatefulWidget {
   const MosqueSelectorSheet({super.key, required this.onSelected});
 
   @override
-  ConsumerState<MosqueSelectorSheet> createState() => _MosqueSelectorSheetState();
+  ConsumerState<MosqueSelectorSheet> createState() =>
+      _MosqueSelectorSheetState();
 }
 
 class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
@@ -69,10 +70,20 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
           Expanded(
             child: mosquesAsync.when(
               data: (mosques) {
-                final filtered = mosques.where((m) =>
-                  m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                  m.address.toLowerCase().contains(_searchQuery.toLowerCase())
-                ).toList();
+                final filtered = mosques
+                    .where(
+                      (m) =>
+                          m.name.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ) ||
+                          m.city.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ) ||
+                          m.address.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ),
+                    )
+                    .toList();
 
                 if (filtered.isEmpty) {
                   return _buildEmptyState();
@@ -87,7 +98,9 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Erreur lors du chargement des mosquées : $err')),
+              error: (err, stack) => Center(
+                child: Text('Erreur lors du chargement des mosquées : $err'),
+              ),
             ),
           ),
         ],
@@ -100,11 +113,7 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.mosque_outlined,
-            size: 48,
-            color: Colors.grey.shade200,
-          ),
+          Icon(Icons.mosque_outlined, size: 48, color: Colors.grey.shade200),
           const SizedBox(height: 16),
           Text(
             'Aucune mosquée trouvée',
@@ -117,32 +126,32 @@ class _MosqueSelectorSheetState extends ConsumerState<MosqueSelectorSheet> {
 
   Widget _buildMosqueTile(Mosque m) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        vertical: 8,
-        horizontal: 8,
-      ),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppTheme.primaryGreen.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
-        child: const Icon(
-          Icons.mosque,
-          color: AppTheme.primaryGreen,
-          size: 20,
-        ),
+        child: const Icon(Icons.mosque, color: AppTheme.primaryGreen, size: 20),
       ),
-      title: Text(
-        m.name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(
-        m.address,
-        style: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 12,
-        ),
+      title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            m.city,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: AppTheme.primaryGreen,
+            ),
+          ),
+          Text(
+            m.address,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          ),
+        ],
       ),
       onTap: () {
         widget.onSelected(m);

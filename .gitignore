@@ -48,3 +48,4 @@ app.*.map.json
 
 /msq_admin
 /mon_app_keystore.jks
+.env

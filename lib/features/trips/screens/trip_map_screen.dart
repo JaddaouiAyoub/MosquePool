@@ -1,18 +1,195 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import '../models/trip.dart';
 import '../../../core/theme/app_theme.dart';
 
-class TripMapScreen extends StatelessWidget {
+class TripMapScreen extends StatefulWidget {
   final Trip trip;
 
   const TripMapScreen({super.key, required this.trip});
 
   @override
+  State<TripMapScreen> createState() => _TripMapScreenState();
+}
+
+class _TripMapScreenState extends State<TripMapScreen> {
+  final MapController _mapController = MapController();
+  List<LatLng> _routePoints = [];
+  LatLng? _userLocation;
+  bool _isLoadingRoute = false;
+  double? _distanceKm;
+  double? _durationMin;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  String _formatDuration(double minutes) {
+    if (minutes < 60) {
+      return '${minutes.round()} min';
+    }
+    final hours = (minutes / 60).floor();
+    final remainingMins = (minutes % 60).round();
+    return '${hours}h ${remainingMins}min';
+  }
+
+  Future<void> _traceRoute() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Services de localisation désactivés'),
+            content: const Text(
+              'Veuillez activer les services de localisation pour tracer l\'itinéraire.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Geolocator.openLocationSettings();
+                  Navigator.pop(context);
+                },
+                child: const Text('Paramètres'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Permission de localisation refusée')),
+          );
+        }
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permission désactivée'),
+            content: const Text(
+              'La permission de localisation est désactivée de façon permanente. Veuillez l\'activer dans les paramètres de l\'application.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Geolocator.openAppSettings();
+                  Navigator.pop(context);
+                },
+                child: const Text('Ouvrir les paramètres'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isLoadingRoute = true;
+      _routePoints = [];
+      _distanceKm = null;
+      _durationMin = null;
+    });
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      final userLocation = LatLng(position.latitude, position.longitude);
+      setState(() => _userLocation = userLocation);
+
+      final mosqueLat = widget.trip.mosqueLat;
+      final mosqueLng = widget.trip.mosqueLng;
+
+      if (mosqueLat == null || mosqueLng == null) return;
+
+      final accessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
+      // Use alternatives=true to find multiple routes, then we'll pick the shortest
+      final url =
+          'https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.longitude},${userLocation.latitude};$mosqueLng,$mosqueLat?geometries=geojson&alternatives=true&access_token=$accessToken';
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List routes = data['routes'];
+
+        if (routes.isEmpty) return;
+
+        // Find the route with the minimum distance
+        var shortestRoute = routes[0];
+        for (var i = 1; i < routes.length; i++) {
+          if (routes[i]['distance'] < shortestRoute['distance']) {
+            shortestRoute = routes[i];
+          }
+        }
+
+        final List coordinates = shortestRoute['geometry']['coordinates'];
+        final double distance = (shortestRoute['distance'] as num)
+            .toDouble(); // meters
+        final double duration = (shortestRoute['duration'] as num)
+            .toDouble(); // seconds
+
+        setState(() {
+          _routePoints = coordinates
+              .map((c) => LatLng(c[1].toDouble(), c[0].toDouble()))
+              .toList();
+          _distanceKm = distance / 1000;
+          _durationMin = duration / 60;
+        });
+
+        // Zoom to show both points
+        final bounds = LatLngBounds.fromPoints([
+          userLocation,
+          LatLng(mosqueLat, mosqueLng),
+        ]);
+        _mapController.fitCamera(
+          CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors du calcul de l\'itinéraire: $e')),
+        );
+      }
+    } finally {
+      setState(() => _isLoadingRoute = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final mosqueLat = trip.mosqueLat;
-    final mosqueLng = trip.mosqueLng;
+    final mosqueLat = widget.trip.mosqueLat;
+    final mosqueLng = widget.trip.mosqueLng;
+    final accessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -32,15 +209,27 @@ class TripMapScreen extends StatelessWidget {
       ),
       body: mosqueLat != null && mosqueLng != null
           ? FlutterMap(
+              mapController: _mapController,
               options: MapOptions(
                 initialCenter: LatLng(mosqueLat, mosqueLng),
                 initialZoom: 16.0,
               ),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.msq',
+                  urlTemplate:
+                      'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$accessToken',
+                  additionalOptions: {'access_token': accessToken ?? ''},
                 ),
+                if (_routePoints.isNotEmpty)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: _routePoints,
+                        color: AppTheme.primaryGreen,
+                        strokeWidth: 5,
+                      ),
+                    ],
+                  ),
                 MarkerLayer(
                   markers: [
                     Marker(
@@ -66,7 +255,7 @@ class TripMapScreen extends StatelessWidget {
                               ],
                             ),
                             child: Text(
-                              trip.mosqueName,
+                              widget.trip.mosqueName,
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -82,6 +271,19 @@ class TripMapScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (_userLocation != null)
+                      Marker(
+                        point: _userLocation!,
+                        width: 20,
+                        height: 20,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -107,11 +309,8 @@ class TripMapScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              trip.mosqueName,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              widget.trip.mosqueName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Row(
@@ -124,20 +323,50 @@ class TripMapScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    trip.mosqueAddress,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
-                    ),
+                    widget.trip.mosqueAddress,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ),
               ],
             ),
+            if (_distanceKm != null && _durationMin != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGreen.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.primaryGreen.withOpacity(0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildRouteInfoItem(
+                      Icons.directions_car,
+                      'Distance',
+                      '${_distanceKm!.toStringAsFixed(1)} km',
+                    ),
+                    Container(
+                      height: 30,
+                      width: 1,
+                      color: AppTheme.primaryGreen.withOpacity(0.1),
+                    ),
+                    _buildRouteInfoItem(
+                      Icons.timer,
+                      'Durée',
+                      _formatDuration(_durationMin!),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isLoadingRoute ? null : _traceRoute,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryGreen,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -145,12 +374,48 @@ class TripMapScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text("Compris"),
+                child: _isLoadingRoute
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text("Tracer l'itinéraire"),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRouteInfoItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: AppTheme.primaryGreen),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: AppTheme.primaryGreen,
+          ),
+        ),
+      ],
     );
   }
 }
