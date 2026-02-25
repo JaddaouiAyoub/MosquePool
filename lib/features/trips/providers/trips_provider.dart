@@ -265,18 +265,33 @@ final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
   SearchQueryNotifier.new,
 );
 
+class SelectedCityNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  set state(String? value) => super.state = value;
+}
+
+final selectedCityProvider = NotifierProvider<SelectedCityNotifier, String?>(
+  SelectedCityNotifier.new,
+);
+
 final filteredTripsProvider = Provider<List<Trip>>((ref) {
   final trips = ref.watch(tripsProvider);
   final query = ref.watch(searchQueryProvider).toLowerCase();
+  final selectedCity = ref.watch(selectedCityProvider);
   final user = ref.watch(profileProvider);
 
   return trips.where((trip) {
     // 1. Filter out own trips
     if (trip.driverId == user.id) return false;
 
-    // 2. Filter by search query
+    // 2. Filter by city
+    if (selectedCity != null && trip.mosqueCity != selectedCity) return false;
+
+    // 3. Filter by search query
     if (query.isEmpty) return true;
     return trip.mosqueName.toLowerCase().contains(query) ||
-        trip.departurePoint.toLowerCase().contains(query);
+        trip.departurePoint.toLowerCase().contains(query) ||
+        trip.mosqueCity.toLowerCase().contains(query);
   }).toList();
 });

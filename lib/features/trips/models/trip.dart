@@ -11,6 +11,7 @@ class Trip {
   final String departurePoint;
   final String mosqueName;
   final String mosqueAddress;
+  final String mosqueCity;
   final double? mosqueLat;
   final double? mosqueLng;
   final DateTime departureTime;
@@ -30,6 +31,7 @@ class Trip {
     required this.departurePoint,
     required this.mosqueName,
     this.mosqueAddress = '',
+    this.mosqueCity = '',
     this.mosqueLat,
     this.mosqueLng,
     required this.departureTime,
@@ -55,6 +57,7 @@ class Trip {
     String? departurePoint,
     String? mosqueName,
     String? mosqueAddress,
+    String? mosqueCity,
     double? mosqueLat,
     double? mosqueLng,
     DateTime? departureTime,
@@ -72,6 +75,7 @@ class Trip {
       departurePoint: departurePoint ?? this.departurePoint,
       mosqueName: mosqueName ?? this.mosqueName,
       mosqueAddress: mosqueAddress ?? this.mosqueAddress,
+      mosqueCity: mosqueCity ?? this.mosqueCity,
       mosqueLat: mosqueLat ?? this.mosqueLat,
       mosqueLng: mosqueLng ?? this.mosqueLng,
       departureTime: departureTime ?? this.departureTime,
@@ -93,6 +97,7 @@ class Trip {
       'departurePoint': departurePoint,
       'mosqueName': mosqueName,
       'mosqueAddress': mosqueAddress,
+      'mosqueCity': mosqueCity,
       'mosqueLat': mosqueLat,
       'mosqueLng': mosqueLng,
       'departureTime': departureTime.toIso8601String(),
@@ -125,6 +130,7 @@ class Trip {
       departurePoint: map['departurePoint'] ?? '',
       mosqueName: map['mosqueName'] ?? '',
       mosqueAddress: map['mosqueAddress'] ?? '',
+      mosqueCity: map['mosqueCity'] ?? '',
       mosqueLat: (map['mosqueLat'] as num?)?.toDouble(),
       mosqueLng: (map['mosqueLng'] as num?)?.toDouble(),
       departureTime: DateTime.parse(map['departureTime']),

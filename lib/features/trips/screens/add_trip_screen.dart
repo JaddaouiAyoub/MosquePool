@@ -25,6 +25,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
   ];
   String? _selectedMosqueId;
   String? _selectedMosqueAddress;
+  String? _selectedMosqueCity;
   double? _selectedMosqueLat;
   double? _selectedMosqueLng;
   bool _isLoading = false;
@@ -105,6 +106,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                         _mosqueController.text = mosque.name;
                         _selectedMosqueId = mosque.id;
                         _selectedMosqueAddress = mosque.address;
+                        _selectedMosqueCity = mosque.city;
                         _selectedMosqueLat = mosque.latitude;
                         _selectedMosqueLng = mosque.longitude;
                       });
@@ -326,6 +328,7 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
               departurePoint: _departureController.text,
               mosqueName: _mosqueController.text,
               mosqueAddress: _selectedMosqueAddress ?? '',
+              mosqueCity: _selectedMosqueCity ?? '',
               mosqueLat: _selectedMosqueLat,
               mosqueLng: _selectedMosqueLng,
               seatsAvailable: int.parse(_seatsController.text),

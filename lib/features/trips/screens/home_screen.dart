@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/trips_provider.dart';
 import '../widgets/trip_card.dart';
+import '../widgets/city_selector_sheet.dart';
 import '../../notifications/providers/notifications_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -12,8 +13,11 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trips = ref.watch(filteredTripsProvider);
-    final unreadCount = ref.watch(notificationsProvider).where((n) => !n.isRead).length;
-    
+    final unreadCount = ref
+        .watch(notificationsProvider)
+        .where((n) => !n.isRead)
+        .length;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -25,11 +29,7 @@ class HomeScreen extends ConsumerWidget {
               title: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    'assets/logo/logo1.png',
-                    height: 40,
-                    width: 40,
-                  ),
+                  Image.asset('assets/logo/logo1.png', height: 40, width: 40),
                   const SizedBox(width: 10),
                   const Text(
                     'LiftMosque',
@@ -77,29 +77,112 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                onChanged: (value) => ref.read(searchQueryProvider.notifier).state = value,
-                decoration: InputDecoration(
-                  hintText: 'Rechercher une mosquée ou un point de départ...',
-                  prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGreen),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppTheme.primaryGreen, width: 1),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    onChanged: (value) =>
+                        ref.read(searchQueryProvider.notifier).state = value,
+                    decoration: InputDecoration(
+                      hintText:
+                          'Rechercher une mosquée ou un point de départ...',
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppTheme.primaryGreen,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(
+                          color: AppTheme.primaryGreen,
+                          width: 1,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      FilterChip(
+                        label: const Text('Toutes'),
+                        selected: ref.watch(selectedCityProvider) == null,
+                        onSelected: (_) =>
+                            ref.read(selectedCityProvider.notifier).state =
+                                null,
+                        backgroundColor: Colors.white,
+                        selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                        checkmarkColor: AppTheme.primaryGreen,
+                        labelStyle: TextStyle(
+                          color: ref.watch(selectedCityProvider) == null
+                              ? AppTheme.primaryGreen
+                              : Colors.grey.shade700,
+                        ),
+                        side: BorderSide(
+                          color: ref.watch(selectedCityProvider) == null
+                              ? AppTheme.primaryGreen
+                              : Colors.grey.shade200,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ActionChip(
+                        avatar: Icon(
+                          Icons.location_city,
+                          size: 16,
+                          color: ref.watch(selectedCityProvider) != null
+                              ? AppTheme.primaryGreen
+                              : Colors.grey.shade600,
+                        ),
+                        label: Text(
+                          ref.watch(selectedCityProvider) ??
+                              'Choisir une ville',
+                          style: TextStyle(
+                            color: ref.watch(selectedCityProvider) != null
+                                ? AppTheme.primaryGreen
+                                : Colors.grey.shade700,
+                            fontWeight: ref.watch(selectedCityProvider) != null
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => CitySelectorSheet(
+                              selectedCity: ref.watch(selectedCityProvider),
+                              onSelected: (city) {
+                                ref.read(selectedCityProvider.notifier).state =
+                                    city;
+                              },
+                            ),
+                          );
+                        },
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: ref.watch(selectedCityProvider) != null
+                              ? AppTheme.primaryGreen
+                              : Colors.grey.shade200,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
           if (trips.isEmpty)
@@ -108,11 +191,18 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
+                    Icon(
+                      Icons.search_off,
+                      size: 64,
+                      color: Colors.grey.shade300,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Aucun trajet trouvé',
-                      style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
