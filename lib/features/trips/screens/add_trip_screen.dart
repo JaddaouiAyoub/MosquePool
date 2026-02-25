@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +32,48 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
   String? _selectedMosqueCity;
   double? _selectedMosqueLat;
   double? _selectedMosqueLng;
+  double? _departureLat;
+  double? _departureLng;
   bool _isLoading = false;
+
+  Future<void> _handleCurrentLocation() async {
+    setState(() => _isLoading = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Permission de localisation refusée');
+        }
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      _departureLat = position.latitude;
+      _departureLng = position.longitude;
+
+      final accessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
+      final url =
+          'https://api.mapbox.com/geocoding/v5/mapbox.places/${position.longitude},${position.latitude}.json?access_token=$accessToken&limit=1';
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['features'] != null && data['features'].isNotEmpty) {
+          setState(() {
+            _departureController.text = data['features'][0]['place_name'];
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -84,6 +129,12 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                   Icons.my_location,
                   color: AppTheme.secondaryBlue,
                 ),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.gps_fixed, size: 20),
+                  onPressed: _handleCurrentLocation,
+                  tooltip: 'Ma position',
+                  color: AppTheme.primaryGreen,
+                ),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -91,6 +142,11 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
+              onChanged: (val) {
+                // If user edits manually, reset coordinates
+                _departureLat = null;
+                _departureLng = null;
+              },
               validator: (val) => val!.isEmpty ? 'Champ requis' : null,
             ),
             const SizedBox(height: 16),
@@ -326,6 +382,8 @@ class _AddTripScreenState extends ConsumerState<AddTripScreen> {
               driverName: user.fullName,
               driverPhone: user.phone,
               departurePoint: _departureController.text,
+              departureLat: _departureLat,
+              departureLng: _departureLng,
               mosqueName: _mosqueController.text,
               mosqueAddress: _selectedMosqueAddress ?? '',
               mosqueCity: _selectedMosqueCity ?? '',

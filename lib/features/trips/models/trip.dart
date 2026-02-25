@@ -9,6 +9,8 @@ class Trip {
   final String driverName;
   final String driverPhone;
   final String departurePoint;
+  final double? departureLat;
+  final double? departureLng;
   final String mosqueName;
   final String mosqueAddress;
   final String mosqueCity;
@@ -29,6 +31,8 @@ class Trip {
     required this.driverName,
     required this.driverPhone,
     required this.departurePoint,
+    this.departureLat,
+    this.departureLng,
     required this.mosqueName,
     this.mosqueAddress = '',
     this.mosqueCity = '',
@@ -55,6 +59,8 @@ class Trip {
     List<UserModel>? interestedUsers,
     String? mosqueId,
     String? departurePoint,
+    double? departureLat,
+    double? departureLng,
     String? mosqueName,
     String? mosqueAddress,
     String? mosqueCity,
@@ -73,6 +79,8 @@ class Trip {
       driverName: driverName,
       driverPhone: driverPhone ?? this.driverPhone,
       departurePoint: departurePoint ?? this.departurePoint,
+      departureLat: departureLat ?? this.departureLat,
+      departureLng: departureLng ?? this.departureLng,
       mosqueName: mosqueName ?? this.mosqueName,
       mosqueAddress: mosqueAddress ?? this.mosqueAddress,
       mosqueCity: mosqueCity ?? this.mosqueCity,
@@ -95,6 +103,8 @@ class Trip {
       'driverName': driverName,
       'driverPhone': driverPhone,
       'departurePoint': departurePoint,
+      'departureLat': departureLat,
+      'departureLng': departureLng,
       'mosqueName': mosqueName,
       'mosqueAddress': mosqueAddress,
       'mosqueCity': mosqueCity,
@@ -128,6 +138,8 @@ class Trip {
       driverName: map['driverName'] ?? '',
       driverPhone: map['driverPhone'] ?? '',
       departurePoint: map['departurePoint'] ?? '',
+      departureLat: (map['departureLat'] as num?)?.toDouble(),
+      departureLng: (map['departureLng'] as num?)?.toDouble(),
       mosqueName: map['mosqueName'] ?? '',
       mosqueAddress: map['mosqueAddress'] ?? '',
       mosqueCity: map['mosqueCity'] ?? '',

@@ -17,6 +17,8 @@ class TripMapScreen extends StatefulWidget {
   State<TripMapScreen> createState() => _TripMapScreenState();
 }
 
+enum RouteType { planned, current }
+
 class _TripMapScreenState extends State<TripMapScreen> {
   final MapController _mapController = MapController();
   List<LatLng> _routePoints = [];
@@ -24,10 +26,14 @@ class _TripMapScreenState extends State<TripMapScreen> {
   bool _isLoadingRoute = false;
   double? _distanceKm;
   double? _durationMin;
+  RouteType _selectedRouteType = RouteType.planned;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _traceRouteByType(RouteType.planned);
+    });
   }
 
   String _formatDuration(double minutes) {
@@ -39,13 +45,37 @@ class _TripMapScreenState extends State<TripMapScreen> {
     return '${hours}h ${remainingMins}min';
   }
 
-  Future<void> _traceRoute() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+  Future<void> _traceRouteByType(RouteType type) async {
+    setState(() => _selectedRouteType = type);
 
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (type == RouteType.planned) {
+      if (widget.trip.departureLat != null &&
+          widget.trip.departureLng != null &&
+          widget.trip.mosqueLat != null &&
+          widget.trip.mosqueLng != null) {
+        await _traceRoute(
+          start: LatLng(widget.trip.departureLat!, widget.trip.departureLng!),
+          end: LatLng(widget.trip.mosqueLat!, widget.trip.mosqueLng!),
+        );
+      } else {
+        // Fallback or message if planned coordinates missing
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Coordonnées du trajet prévu manquantes'),
+            ),
+          );
+        }
+      }
+    } else {
+      await _traceRouteFromUser();
+    }
+  }
+
+  Future<void> _traceRouteFromUser() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      // ... same location check as before
       if (mounted) {
         showDialog(
           context: context,
@@ -73,47 +103,34 @@ class _TripMapScreenState extends State<TripMapScreen> {
       return;
     }
 
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Permission de localisation refusée')),
-          );
-        }
-        return;
-      }
     }
 
-    if (permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Permission désactivée'),
-            content: const Text(
-              'La permission de localisation est désactivée de façon permanente. Veuillez l\'activer dans les paramètres de l\'application.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Annuler'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Geolocator.openAppSettings();
-                  Navigator.pop(context);
-                },
-                child: const Text('Ouvrir les paramètres'),
-              ),
-            ],
-          ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Permission de localisation refusée')),
         );
       }
       return;
     }
 
+    final position = await Geolocator.getCurrentPosition();
+    final userLocation = LatLng(position.latitude, position.longitude);
+    setState(() => _userLocation = userLocation);
+
+    if (widget.trip.mosqueLat != null && widget.trip.mosqueLng != null) {
+      await _traceRoute(
+        start: userLocation,
+        end: LatLng(widget.trip.mosqueLat!, widget.trip.mosqueLng!),
+      );
+    }
+  }
+
+  Future<void> _traceRoute({required LatLng start, required LatLng end}) async {
     setState(() {
       _isLoadingRoute = true;
       _routePoints = [];
@@ -122,19 +139,9 @@ class _TripMapScreenState extends State<TripMapScreen> {
     });
 
     try {
-      final position = await Geolocator.getCurrentPosition();
-      final userLocation = LatLng(position.latitude, position.longitude);
-      setState(() => _userLocation = userLocation);
-
-      final mosqueLat = widget.trip.mosqueLat;
-      final mosqueLng = widget.trip.mosqueLng;
-
-      if (mosqueLat == null || mosqueLng == null) return;
-
       final accessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
-      // Use alternatives=true to find multiple routes, then we'll pick the shortest
       final url =
-          'https://api.mapbox.com/directions/v5/mapbox/driving/${userLocation.longitude},${userLocation.latitude};$mosqueLng,$mosqueLat?geometries=geojson&alternatives=true&access_token=$accessToken';
+          'https://api.mapbox.com/directions/v5/mapbox/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?geometries=geojson&alternatives=true&access_token=$accessToken';
 
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -143,7 +150,6 @@ class _TripMapScreenState extends State<TripMapScreen> {
 
         if (routes.isEmpty) return;
 
-        // Find the route with the minimum distance
         var shortestRoute = routes[0];
         for (var i = 1; i < routes.length; i++) {
           if (routes[i]['distance'] < shortestRoute['distance']) {
@@ -152,10 +158,8 @@ class _TripMapScreenState extends State<TripMapScreen> {
         }
 
         final List coordinates = shortestRoute['geometry']['coordinates'];
-        final double distance = (shortestRoute['distance'] as num)
-            .toDouble(); // meters
-        final double duration = (shortestRoute['duration'] as num)
-            .toDouble(); // seconds
+        final double distance = (shortestRoute['distance'] as num).toDouble();
+        final double duration = (shortestRoute['duration'] as num).toDouble();
 
         setState(() {
           _routePoints = coordinates
@@ -165,23 +169,19 @@ class _TripMapScreenState extends State<TripMapScreen> {
           _durationMin = duration / 60;
         });
 
-        // Zoom to show both points
-        final bounds = LatLngBounds.fromPoints([
-          userLocation,
-          LatLng(mosqueLat, mosqueLng),
-        ]);
+        final bounds = LatLngBounds.fromPoints([start, end]);
         _mapController.fitCamera(
           CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(50)),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors du calcul de l\'itinéraire: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
       }
     } finally {
-      setState(() => _isLoadingRoute = false);
+      if (mounted) setState(() => _isLoadingRoute = false);
     }
   }
 
@@ -232,6 +232,7 @@ class _TripMapScreenState extends State<TripMapScreen> {
                   ),
                 MarkerLayer(
                   markers: [
+                    // Mosque Marker
                     Marker(
                       point: LatLng(mosqueLat, mosqueLng),
                       width: 150,
@@ -271,7 +272,26 @@ class _TripMapScreenState extends State<TripMapScreen> {
                         ],
                       ),
                     ),
-                    if (_userLocation != null)
+                    // Departure Marker (Planned Route)
+                    if (_selectedRouteType == RouteType.planned &&
+                        widget.trip.departureLat != null &&
+                        widget.trip.departureLng != null)
+                      Marker(
+                        point: LatLng(
+                          widget.trip.departureLat!,
+                          widget.trip.departureLng!,
+                        ),
+                        width: 40,
+                        height: 40,
+                        child: const Icon(
+                          Icons.trip_origin,
+                          color: AppTheme.secondaryBlue,
+                          size: 30,
+                        ),
+                      ),
+                    // User Location Marker (Current Position Route)
+                    if (_selectedRouteType == RouteType.current &&
+                        _userLocation != null)
                       Marker(
                         point: _userLocation!,
                         width: 20,
@@ -363,31 +383,49 @@ class _TripMapScreenState extends State<TripMapScreen> {
               ),
             ],
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoadingRoute ? null : _traceRoute,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildRouteTypeButton(
+                    type: RouteType.planned,
+                    label: 'Trajet prévu',
+                    icon: Icons.map,
                   ),
                 ),
-                child: _isLoadingRoute
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text("Tracer l'itinéraire"),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildRouteTypeButton(
+                    type: RouteType.current,
+                    label: 'Ma position',
+                    icon: Icons.my_location,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRouteTypeButton({
+    required RouteType type,
+    required String label,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedRouteType == type;
+    return ElevatedButton.icon(
+      onPressed: _isLoadingRoute ? null : () => _traceRouteByType(type),
+      icon: Icon(icon, size: 18),
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected
+            ? AppTheme.primaryGreen
+            : Colors.grey.shade100,
+        foregroundColor: isSelected ? Colors.white : Colors.black,
+        elevation: isSelected ? 4 : 0,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
