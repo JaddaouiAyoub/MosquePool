@@ -25,6 +25,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _isLoading = false;
   bool _privacyAccepted = false;
   bool _termsAccepted = false;
+  bool _infoConfirmed = false;
 
   @override
   void dispose() {
@@ -189,10 +190,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   linkText: "conditions d'utilisation",
                   onLinkTap: () => context.push('/terms-of-use'),
                 ),
+                const SizedBox(height: 8),
+                _buildSimpleCheckboxRow(
+                  value: _infoConfirmed,
+                  onChanged: (v) => setState(() => _infoConfirmed = v ?? false),
+                  label:
+                      "Je confirme que les informations fournies sont exactes et à jour",
+                ),
                 const SizedBox(height: 40),
                 ElevatedButton(
                       onPressed:
-                          (isLoading || !_privacyAccepted || !_termsAccepted)
+                          (isLoading ||
+                              !_privacyAccepted ||
+                              !_termsAccepted ||
+                              !_infoConfirmed)
                           ? null
                           : _handleSignup,
                       child: isLoading
@@ -344,6 +355,40 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSimpleCheckboxRow({
+    required bool value,
+    required ValueChanged<bool?> onChanged,
+    required String label,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 24,
+          width: 24,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppTheme.primaryGreen,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => onChanged(!value),
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
             ),
           ),
         ),
