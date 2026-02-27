@@ -53,9 +53,7 @@ final routerConfigProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.value != null;
       final isLoggingIn =
           state.matchedLocation == '/login' ||
-          state.matchedLocation == '/signup' ||
-          state.matchedLocation == '/privacy-policy' ||
-          state.matchedLocation == '/terms-of-use';
+          state.matchedLocation == '/signup';
 
       if (!isLoggedIn) {
         if (isLoggingIn || state.matchedLocation == '/onboarding') return null;
