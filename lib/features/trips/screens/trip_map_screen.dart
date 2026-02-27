@@ -122,11 +122,19 @@ class _TripMapScreenState extends State<TripMapScreen> {
     final userLocation = LatLng(position.latitude, position.longitude);
     setState(() => _userLocation = userLocation);
 
-    if (widget.trip.mosqueLat != null && widget.trip.mosqueLng != null) {
+    if (widget.trip.departureLat != null && widget.trip.departureLng != null) {
       await _traceRoute(
         start: userLocation,
-        end: LatLng(widget.trip.mosqueLat!, widget.trip.mosqueLng!),
+        end: LatLng(widget.trip.departureLat!, widget.trip.departureLng!),
       );
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Le point de départ du trajet n\'est pas défini.'),
+          ),
+        );
+      }
     }
   }
 
@@ -272,21 +280,47 @@ class _TripMapScreenState extends State<TripMapScreen> {
                         ],
                       ),
                     ),
-                    // Departure Marker (Planned Route)
-                    if (_selectedRouteType == RouteType.planned &&
-                        widget.trip.departureLat != null &&
+                    // Departure Marker
+                    if (widget.trip.departureLat != null &&
                         widget.trip.departureLng != null)
                       Marker(
                         point: LatLng(
                           widget.trip.departureLat!,
                           widget.trip.departureLng!,
                         ),
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.trip_origin,
-                          color: AppTheme.secondaryBlue,
-                          size: 30,
+                        width: 100,
+                        height: 60,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: AppTheme.secondaryBlue,
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Text(
+                                'Départ',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.secondaryBlue,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.trip_origin,
+                              color: AppTheme.secondaryBlue,
+                              size: 24,
+                            ),
+                          ],
                         ),
                       ),
                     // User Location Marker (Current Position Route)
@@ -294,14 +328,43 @@ class _TripMapScreenState extends State<TripMapScreen> {
                         _userLocation != null)
                       Marker(
                         point: _userLocation!,
-                        width: 20,
-                        height: 20,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
+                        width: 100,
+                        height: 60,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'Ma position',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],
@@ -388,16 +451,16 @@ class _TripMapScreenState extends State<TripMapScreen> {
                 Expanded(
                   child: _buildRouteTypeButton(
                     type: RouteType.planned,
-                    label: 'Trajet prévu',
-                    icon: Icons.map,
+                    label: 'Voir le trajet',
+                    icon: Icons.directions_car,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildRouteTypeButton(
                     type: RouteType.current,
-                    label: 'Ma position',
-                    icon: Icons.my_location,
+                    label: 'Rejoindre le départ',
+                    icon: Icons.directions_walk,
                   ),
                 ),
               ],

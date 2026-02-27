@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
+import '../models/mosque.dart';
 import '../../auth/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../notifications/models/notification_model.dart';
 import '../../notifications/providers/notifications_provider.dart';
 import '../data/trip_repository.dart';
+import 'user_location_provider.dart';
 
 // --- Repository Provider ---
 final tripRepositoryProvider = Provider<TripRepository>(
@@ -275,23 +278,75 @@ final selectedCityProvider = NotifierProvider<SelectedCityNotifier, String?>(
   SelectedCityNotifier.new,
 );
 
+class SelectedMosqueNotifier extends Notifier<Mosque?> {
+  @override
+  Mosque? build() => null;
+  set state(Mosque? value) => super.state = value;
+}
+
+final selectedMosqueFilterProvider =
+    NotifierProvider<SelectedMosqueNotifier, Mosque?>(
+      SelectedMosqueNotifier.new,
+    );
+
 final filteredTripsProvider = Provider<List<Trip>>((ref) {
   final trips = ref.watch(tripsProvider);
   final query = ref.watch(searchQueryProvider).toLowerCase();
   final selectedCity = ref.watch(selectedCityProvider);
+  final selectedMosque = ref.watch(selectedMosqueFilterProvider);
+  final userLocationFuture = ref.watch(userLocationProvider);
   final user = ref.watch(profileProvider);
 
-  return trips.where((trip) {
+  var filteredTrips = trips.where((trip) {
     // 1. Filter out own trips
     if (trip.driverId == user.id) return false;
 
-    // 2. Filter by city
-    if (selectedCity != null && trip.mosqueCity != selectedCity) return false;
+    // 2. Filter by specific Mosque if selected
+    if (selectedMosque != null && trip.mosqueId != selectedMosque.id)
+      return false;
 
-    // 3. Filter by search query
+    // 3. Filter by city (if mosque filter is not active to prevent overriding)
+    if (selectedMosque == null &&
+        selectedCity != null &&
+        trip.mosqueCity != selectedCity)
+      return false;
+
+    // 4. Filter by search query
     if (query.isEmpty) return true;
     return trip.mosqueName.toLowerCase().contains(query) ||
         trip.departurePoint.toLowerCase().contains(query) ||
         trip.mosqueCity.toLowerCase().contains(query);
   }).toList();
+
+  // Sort by distance if a mosque is selected and location is available
+  if (selectedMosque != null) {
+    userLocationFuture.whenData((userLocation) {
+      if (userLocation != null) {
+        final distance = const Distance();
+        filteredTrips.sort((a, b) {
+          final latA = a.departureLat ?? 0.0;
+          final lngA = a.departureLng ?? 0.0;
+          final latB = b.departureLat ?? 0.0;
+          final lngB = b.departureLng ?? 0.0;
+
+          // If coordinates are missing, push to bottom
+          if (latA == 0.0 && lngA == 0.0) return 1;
+          if (latB == 0.0 && lngB == 0.0) return -1;
+
+          final distA = distance(
+            LatLng(userLocation.latitude, userLocation.longitude),
+            LatLng(latA, lngA),
+          );
+          final distB = distance(
+            LatLng(userLocation.latitude, userLocation.longitude),
+            LatLng(latB, lngB),
+          );
+
+          return distA.compareTo(distB);
+        });
+      }
+    });
+  }
+
+  return filteredTrips;
 });

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/trips_provider.dart';
 import '../widgets/trip_card.dart';
 import '../widgets/city_selector_sheet.dart';
+import '../widgets/mosque_selector_sheet.dart';
 import '../../notifications/providers/notifications_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -114,71 +115,153 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('Toutes'),
-                        selected: ref.watch(selectedCityProvider) == null,
-                        onSelected: (_) =>
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          label: const Text('Toutes'),
+                          selected:
+                              ref.watch(selectedCityProvider) == null &&
+                              ref.watch(selectedMosqueFilterProvider) == null,
+                          onSelected: (_) {
                             ref.read(selectedCityProvider.notifier).state =
-                                null,
-                        backgroundColor: Colors.white,
-                        selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
-                        checkmarkColor: AppTheme.primaryGreen,
-                        labelStyle: TextStyle(
-                          color: ref.watch(selectedCityProvider) == null
-                              ? AppTheme.primaryGreen
-                              : Colors.grey.shade700,
-                        ),
-                        side: BorderSide(
-                          color: ref.watch(selectedCityProvider) == null
-                              ? AppTheme.primaryGreen
-                              : Colors.grey.shade200,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ActionChip(
-                        avatar: Icon(
-                          Icons.location_city,
-                          size: 16,
-                          color: ref.watch(selectedCityProvider) != null
-                              ? AppTheme.primaryGreen
-                              : Colors.grey.shade600,
-                        ),
-                        label: Text(
-                          ref.watch(selectedCityProvider) ??
-                              'Choisir une ville',
-                          style: TextStyle(
-                            color: ref.watch(selectedCityProvider) != null
+                                null;
+                            ref
+                                    .read(selectedMosqueFilterProvider.notifier)
+                                    .state =
+                                null;
+                          },
+                          backgroundColor: Colors.white,
+                          selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                          checkmarkColor: AppTheme.primaryGreen,
+                          labelStyle: TextStyle(
+                            color:
+                                (ref.watch(selectedCityProvider) == null &&
+                                    ref.watch(selectedMosqueFilterProvider) ==
+                                        null)
                                 ? AppTheme.primaryGreen
                                 : Colors.grey.shade700,
-                            fontWeight: ref.watch(selectedCityProvider) != null
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                          ),
+                          side: BorderSide(
+                            color:
+                                (ref.watch(selectedCityProvider) == null &&
+                                    ref.watch(selectedMosqueFilterProvider) ==
+                                        null)
+                                ? AppTheme.primaryGreen
+                                : Colors.grey.shade200,
                           ),
                         ),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => CitySelectorSheet(
-                              selectedCity: ref.watch(selectedCityProvider),
-                              onSelected: (city) {
-                                ref.read(selectedCityProvider.notifier).state =
-                                    city;
-                              },
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          avatar: Icon(
+                            Icons.location_city,
+                            size: 16,
+                            color: ref.watch(selectedCityProvider) != null
+                                ? AppTheme.primaryGreen
+                                : Colors.grey.shade600,
+                          ),
+                          label: Text(
+                            ref.watch(selectedCityProvider) ??
+                                'Choisir une ville',
+                            style: TextStyle(
+                              color: ref.watch(selectedCityProvider) != null
+                                  ? AppTheme.primaryGreen
+                                  : Colors.grey.shade700,
+                              fontWeight:
+                                  ref.watch(selectedCityProvider) != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
-                          );
-                        },
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: ref.watch(selectedCityProvider) != null
-                              ? AppTheme.primaryGreen
-                              : Colors.grey.shade200,
+                          ),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => CitySelectorSheet(
+                                selectedCity: ref.watch(selectedCityProvider),
+                                onSelected: (city) {
+                                  ref
+                                          .read(selectedCityProvider.notifier)
+                                          .state =
+                                      city;
+                                  ref
+                                          .read(
+                                            selectedMosqueFilterProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      null;
+                                },
+                              ),
+                            );
+                          },
+                          backgroundColor: Colors.white,
+                          side: BorderSide(
+                            color: ref.watch(selectedCityProvider) != null
+                                ? AppTheme.primaryGreen
+                                : Colors.grey.shade200,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          avatar: Icon(
+                            Icons.mosque,
+                            size: 16,
+                            color:
+                                ref.watch(selectedMosqueFilterProvider) != null
+                                ? AppTheme.primaryGreen
+                                : Colors.grey.shade600,
+                          ),
+                          label: Text(
+                            ref.watch(selectedMosqueFilterProvider)?.name ??
+                                'Proximité (Mosquée)',
+                            style: TextStyle(
+                              color:
+                                  ref.watch(selectedMosqueFilterProvider) !=
+                                      null
+                                  ? AppTheme.primaryGreen
+                                  : Colors.grey.shade700,
+                              fontWeight:
+                                  ref.watch(selectedMosqueFilterProvider) !=
+                                      null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => MosqueSelectorSheet(
+                                onSelected: (mosque) {
+                                  ref
+                                          .read(
+                                            selectedMosqueFilterProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      mosque;
+                                  ref
+                                          .read(selectedCityProvider.notifier)
+                                          .state =
+                                      null;
+                                },
+                              ),
+                            );
+                          },
+                          backgroundColor: Colors.white,
+                          side: BorderSide(
+                            color:
+                                ref.watch(selectedMosqueFilterProvider) != null
+                                ? AppTheme.primaryGreen
+                                : Colors.grey.shade200,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
