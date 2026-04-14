@@ -87,8 +87,8 @@ class HomeScreen extends ConsumerWidget {
                     onChanged: (value) =>
                         ref.read(searchQueryProvider.notifier).state = value,
                     decoration: InputDecoration(
-                      hintText:
-                          'Rechercher une mosquée ou un point de départ...',
+                      hintText: 'Mosquée ou point de départ',
+                      hintStyle: const TextStyle(fontSize: 13),
                       prefixIcon: const Icon(
                         Icons.search,
                         color: AppTheme.primaryGreen,
@@ -112,6 +112,10 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: _AddressAutocompleteField(ref: ref),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -313,6 +317,210 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
       ),
+    );
+  }
+}
+
+class _AddressAutocompleteField extends ConsumerStatefulWidget {
+  final WidgetRef ref;
+
+  const _AddressAutocompleteField({required this.ref});
+
+  @override
+  ConsumerState<_AddressAutocompleteField> createState() =>
+      _AddressAutocompleteFieldState();
+}
+
+class _AddressAutocompleteFieldState
+    extends ConsumerState<_AddressAutocompleteField> {
+  late TextEditingController _controller;
+  bool _showSuggestions = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final suggestions = ref.watch(addressSuggestionsProvider(_controller.text));
+
+    return Column(
+      children: [
+        TextField(
+          controller: _controller,
+          onChanged: (value) {
+            ref.read(addressQueryProvider.notifier).state = value;
+            setState(() => _showSuggestions = value.isNotEmpty);
+          },
+          onTap: () {
+            setState(() =>
+                _showSuggestions = _controller.text.isNotEmpty);
+          },
+          decoration: InputDecoration(
+            hintText: 'Chercher une adresse',
+            hintStyle: const TextStyle(fontSize: 13),
+            prefixIcon: const Icon(
+              Icons.location_on,
+              color: AppTheme.primaryGreen,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppTheme.primaryGreen,
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+        if (_showSuggestions)
+          suggestions.when(
+            data: (addressList) => addressList.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text(
+                          'Aucune adresse trouvée',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(
+                    margin: const EdgeInsets.only(top: 8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: addressList.length,
+                      itemBuilder: (context, index) {
+                        final item = addressList[index];
+                        final displayText =
+                            '${item.address} (${item.lat.toStringAsFixed(4)}, ${item.lng.toStringAsFixed(4)})';
+                        return InkWell(
+                          onTap: () {
+                            _controller.text = item.address;
+                            ref.read(addressQueryProvider.notifier).state =
+                                item.address;
+                            setState(() => _showSuggestions = false);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 10.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  displayText,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade800,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (index < addressList.length - 1)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10.0),
+                                    child: Divider(
+                                      height: 1,
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+            loading: () => Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12.0),
+                child: const SizedBox(
+                  height: 30,
+                  child: Center(
+                    child: SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(
+                          AppTheme.primaryGreen,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            error: (err, stack) => Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  'Erreur: $err',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
 import '../models/mosque.dart';
@@ -289,12 +290,40 @@ final selectedMosqueFilterProvider =
       SelectedMosqueNotifier.new,
     );
 
+class AddressQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  set state(String value) => super.state = value;
+}
+
+final addressQueryProvider = NotifierProvider<AddressQueryNotifier, String>(
+  AddressQueryNotifier.new,
+);
+
+final geocodedLocationProvider = FutureProvider<LatLng?>((ref) async {
+  final address = ref.watch(addressQueryProvider);
+  if (address.isEmpty || address.length < 3) return null;
+
+  try {
+    final locations = await locationFromAddress(address);
+    if (locations.isNotEmpty) {
+      final location = locations.first;
+      return LatLng(location.latitude, location.longitude);
+    }
+  } catch (e) {
+    // Handle geocoding error silently
+    return null;
+  }
+  return null;
+});
+
 final filteredTripsProvider = Provider<List<Trip>>((ref) {
   final trips = ref.watch(tripsProvider);
   final query = ref.watch(searchQueryProvider).toLowerCase();
   final selectedCity = ref.watch(selectedCityProvider);
   final selectedMosque = ref.watch(selectedMosqueFilterProvider);
   final userLocationFuture = ref.watch(userLocationProvider);
+  final geocodedLocationAsync = ref.watch(geocodedLocationProvider);
   final user = ref.watch(profileProvider);
 
   var filteredTrips = trips.where((trip) {
@@ -317,6 +346,21 @@ final filteredTripsProvider = Provider<List<Trip>>((ref) {
         trip.departurePoint.toLowerCase().contains(query) ||
         trip.mosqueCity.toLowerCase().contains(query);
   }).toList();
+
+  // 5. Filter by proximity to geocoded address
+  geocodedLocationAsync.whenData((geocodedLocation) {
+    if (geocodedLocation != null) {
+      final distance = const Distance();
+      filteredTrips = filteredTrips.where((trip) {
+        if (trip.departureLat != null && trip.departureLng != null) {
+          final tripLocation = LatLng(trip.departureLat!, trip.departureLng!);
+          final dist = distance(geocodedLocation, tripLocation);
+          return dist <= 10000; // 10km
+        }
+        return false; // If no coordinates, exclude
+      }).toList();
+    }
+  });
 
   // Sort by distance if a mosque is selected and location is available
   if (selectedMosque != null) {
@@ -349,4 +393,31 @@ final filteredTripsProvider = Provider<List<Trip>>((ref) {
   }
 
   return filteredTrips;
+});
+
+// --- Address Suggestions Provider (with debounce to optimize Geocoding API calls) ---
+final addressSuggestionsProvider =
+    FutureProvider.family<List<({String address, double lat, double lng})>, String>(
+        (ref, address) async {
+  if (address.isEmpty || address.length < 3) return [];
+
+  try {
+    // Delay to avoid excessive API calls while user is typing
+    await Future.delayed(const Duration(milliseconds: 500));
+    final locations = await locationFromAddress(address);
+    
+    // Convert Location objects to display format
+    final suggestions = locations.take(5).map((loc) {
+      return (
+        address: address,
+        lat: loc.latitude,
+        lng: loc.longitude,
+      );
+    }).toList();
+    
+    return suggestions;
+  } catch (e) {
+    print('Address suggestion error: $e');
+    return [];
+  }
 });

@@ -132,7 +132,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 _buildTextField(
                   controller: _phoneController,
                   label: 'Numéro de téléphone',
-                  hint: '+212 600 000 000',
+                  hint: '+1 600 000 000',
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   validator: (v) => v?.isEmpty ?? true

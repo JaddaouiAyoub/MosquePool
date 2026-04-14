@@ -42,39 +42,40 @@ class TripCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.mosque,
+                            size: 14,
+                            color: AppTheme.primaryGreen,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            trip.mosqueName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.mosque,
-                                size: 14,
-                                color: AppTheme.primaryGreen,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                trip.mosqueName,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Spacer(),
                         Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               DateFormat('HH:mm').format(trip.departureTime),
@@ -137,6 +138,8 @@ class TripCard extends ConsumerWidget {
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
